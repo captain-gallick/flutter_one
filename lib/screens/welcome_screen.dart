@@ -2,49 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/painting.dart';
-import 'package:flutter_app_one/app_colors.dart';
-
-import 'login_screen.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_app_one/my_widgets/text_button.dart';
+import 'package:flutter_app_one/screens/login_screen.dart';
 
 final List<String> imgList = [
-  'assets/images/1.jpeg',
-  'assets/images/2.jpg',
-  'assets/images/3.jpg',
-  'assets/images/4.jpg',
-  'assets/images/5.jpg'
+  'assets/images/slider1.png',
+  'assets/images/slider2.png'
 ];
-
-final List<Widget> imageSliders = imgList
-    .map((item) => Container(
-          margin: const EdgeInsets.all(5.0),
-          child: ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(5.0)),
-              child: Stack(
-                children: <Widget>[
-                  Image.asset(item, fit: BoxFit.fill, width: 1000.0),
-                  Positioned(
-                    bottom: 0.0,
-                    left: 0.0,
-                    right: 0.0,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color.fromARGB(200, 0, 0, 0),
-                            Color.fromARGB(0, 0, 0, 0)
-                          ],
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10.0, horizontal: 20.0),
-                    ),
-                  ),
-                ],
-              )),
-        ))
-    .toList();
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({Key? key}) : super(key: key);
@@ -65,7 +30,9 @@ class ManuallyControlledSlider extends StatefulWidget {
 }
 
 class _ManuallyControlledSliderState extends State<ManuallyControlledSlider> {
-  final CarouselController _controller = CarouselController();
+  bool skipShown = true;
+  int _current = 0;
+  final CarouselController controller = CarouselController();
 
   @override
   void initState() {
@@ -74,64 +41,234 @@ class _ManuallyControlledSliderState extends State<ManuallyControlledSlider> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-        child: Container(
-      decoration: const BoxDecoration(
-          gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [AppColors.bgTopColor, AppColors.bgBottomColor])),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: <Widget>[
-          const Text('ONBOARDING',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 30.0,
-                  fontWeight: FontWeight.bold)),
-          CarouselSlider(
-            items: imageSliders,
-            options: CarouselOptions(
-                enlargeCenterPage: true,
-                height: 200,
-                enableInfiniteScroll: false),
-            carouselController: _controller,
-          ),
-          const SizedBox(height: 200.0),
-          const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 25.0),
+    return SafeArea(
+        child: WillPopScope(
+      onWillPop: () async {
+        SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+        return false;
+      },
+      child: Scaffold(
+          extendBodyBehindAppBar: true,
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: const Center(
               child: Text(
-                'Welcome to our App. We provide different kind of services for your ease.',
-                textAlign: TextAlign.center,
+                "ONBOARDING",
                 style: TextStyle(
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              )),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              Flexible(
-                child: ElevatedButton(
-                  onPressed: () => skipButton(),
-                  child: const Text('LOGIN'),
+                  color: Colors.white,
+                  fontSize: 25.0,
                 ),
               ),
-              Flexible(
-                child: ElevatedButton(
-                  onPressed: () => _controller.nextPage(),
-                  child: const Text("NEXT"),
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0.0,
+          ),
+          body: Container(
+            decoration: const BoxDecoration(
+                image: DecorationImage(
+              image: AssetImage('assets/images/background1.png'),
+              fit: BoxFit.cover,
+            )),
+            child: Stack(
+              children: <Widget>[
+                Builder(
+                  builder: (context) {
+                    final double height = MediaQuery.of(context).size.height;
+                    return CarouselSlider(
+                      carouselController: controller,
+                      options: CarouselOptions(
+                          height: height,
+                          viewportFraction: 1.0,
+                          enlargeCenterPage: false,
+                          autoPlay: false,
+                          enableInfiniteScroll: false,
+                          onPageChanged: (index, reason) {
+                            setState(() {
+                              _current = index;
+                              if (index == imgList.length - 1) {
+                                skipShown = false;
+                              } else {
+                                skipShown = true;
+                              }
+                            });
+                          }),
+                      items: imgList
+                          .map((item) => Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: <Widget>[
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 15.0),
+                                      child: Image.asset(
+                                        item,
+                                        fit: BoxFit.fill,
+                                      ),
+                                    ),
+                                    sliderT(_current),
+                                  ]))
+                          .toList(),
+                    );
+                  },
                 ),
-              ),
-            ],
-          )
-        ],
-      ),
+                Positioned.fill(
+                    bottom: 27,
+                    child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: imgList.asMap().entries.map((entry) {
+                              return Container(
+                                width: 10.0,
+                                height: 10.0,
+                                margin: const EdgeInsets.symmetric(
+                                    vertical: 8.0, horizontal: 4.0),
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: (Theme.of(context).brightness ==
+                                                Brightness.light
+                                            ? Colors.green
+                                            : Colors.white)
+                                        .withOpacity(
+                                            _current == entry.key ? 1.0 : 0.4)),
+                              );
+                            }).toList()))),
+                Positioned(
+                  bottom: 16,
+                  left: 16,
+                  child: !skipShown
+                      ? const SizedBox.shrink()
+                      : MyTextButton(
+                          title: 'SKIP',
+                          onPressed: skip,
+                          size: 22.0,
+                        ),
+                ),
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: !skipShown
+                      ? const SizedBox.shrink()
+                      : MyTextButton(
+                          title: 'NEXT',
+                          onPressed: gotoNextPage,
+                          size: 22.0,
+                        ),
+                ),
+              ],
+            ),
+          )),
     ));
   }
 
-  void skipButton() {
+  void skip() {
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => const LoginScreen()));
   }
+
+  void gotoNextPage() {
+    controller.nextPage();
+    if (_current == imgList.length - 1) {
+      skip();
+    }
+  }
+
+  Column sliderT(int index) {
+    Column container = Column();
+    switch (index) {
+      case 0:
+        container = Column(
+          children: const <Widget>[
+            Text(
+              'Bringing Sewerag fitting\nSolutions to To Your Home',
+              style: TextStyle(color: Colors.white, fontSize: 30.0),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 150.0),
+          ],
+        );
+        break;
+      case 1:
+        container = Column(
+          children: [
+            const Text(
+              'Find the Right Cure for Your\nSeverage Systems',
+              style: TextStyle(color: Colors.white, fontSize: 30.0),
+              textAlign: TextAlign.center,
+            ),
+            IconButton(
+              onPressed: gotoNextPage,
+              icon: Image.asset('assets/images/lets_start_button.png'),
+              iconSize: 150,
+            )
+          ],
+        );
+        break;
+    }
+    return container;
+  }
+
+  // Column sliderText(int index) {
+  //   switch (index) {
+  //     case 0:
+  //       Column container = Column(children: [
+  //         const Text('WELCOME',
+  //         style: const TextStyle(color: Colors.white, fontSize: 80.0)),
+  //         const Padding(
+  //       padding: EdgeInsets.all(15.0),
+  //       child: const Text(
+  //         'Ut labore et dolore roipi mana aliqua. Enim adeop minim veeniam nostruklad',
+  //         style: TextStyle(color: Colors.white, fontSize: 25.0),
+  //         textAlign: TextAlign.center,
+  //       ),
+  //         )
+  //       ]);
+  //       break;
+  //     case 1:
+  //       container = Column(children: [
+  //         const Text('DISCOVER',
+  //         style: const TextStyle(color: Colors.white, fontSize: 50.0)),
+  //         const Padding(
+  //       padding: EdgeInsets.all(25.0),
+  //       child: Text(
+  //         'Labore ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut ero labore.',
+  //         style: TextStyle(color: Colors.white, fontSize: 30.0),
+  //         textAlign: TextAlign.center,
+  //       ),
+  //         )
+  //       ]);
+  //       break;
+  //     case 2:
+  //       container = Container(
+  //           child: Column(
+  //         children: [
+  //           const Text(
+  //             'Bringing Sewerag fitting\nSolutions to To Your Home',
+  //             style: const TextStyle(color: Colors.white, fontSize: 30.0),
+  //             textAlign: TextAlign.center,
+  //           ),
+  //           const SizedBox(height: 150.0),
+  //         ],
+  //       ));
+  //       break;
+  //     case 3:
+  //       container = Container(
+  //         child: Column(
+  //           children: [
+  //             const Text(
+  //               'Find the Right Cure for Your\nSeverage Systems',
+  //               style: TextStyle(color: Colors.white, fontSize: 30.0),
+  //               textAlign: TextAlign.center,
+  //             ),
+  //             IconButton(
+  //               onPressed: gotoNextPage,
+  //               icon: Image.asset('assets/images/lets_start_button.png'),
+  //               iconSize: 150,
+  //             )
+  //           ],
+  //         ),
+  //       );
+  //       break;
+  //   }
+  //   return container;
+  // }
 }
