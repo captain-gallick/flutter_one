@@ -2,7 +2,8 @@ class AppUrl {
   static const String baseDomain = 'https://svtindia.in/maljalorg/';
   static const String baseURL =
       "https://svtindia.in/maljalorg/api/authentication";
-  static const String login = baseURL + "/login";
+  static const String sendOtp = baseURL + "/login";
+  static const String verifyOtp = baseURL + "/verify";
   static const String register = baseURL + "/registration";
 
   static const String baseServices = 'https://svtindia.in/maljalorg/api';

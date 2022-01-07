@@ -5,6 +5,9 @@ import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_one/my_widgets/text_button.dart';
 import 'package:flutter_app_one/screens/login_screen.dart';
+import 'package:flutter_app_one/utils/shared_preferences.dart';
+
+import 'book_track_screen.dart';
 
 final List<String> imgList = [
   'assets/images/slider1.png',
@@ -37,6 +40,8 @@ class _ManuallyControlledSliderState extends State<ManuallyControlledSlider> {
   @override
   void initState() {
     super.initState();
+    UserPreferences preferences = UserPreferences();
+    preferences.setWelcomeScreenStatus(true);
   }
 
   @override
@@ -163,6 +168,9 @@ class _ManuallyControlledSliderState extends State<ManuallyControlledSlider> {
   void skip() {
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+
+    // Navigator.pushReplacement(context,
+    //     MaterialPageRoute(builder: (context) => const PseudoLoginScreen()));
   }
 
   void gotoNextPage() {
@@ -206,69 +214,4 @@ class _ManuallyControlledSliderState extends State<ManuallyControlledSlider> {
     }
     return container;
   }
-
-  // Column sliderText(int index) {
-  //   switch (index) {
-  //     case 0:
-  //       Column container = Column(children: [
-  //         const Text('WELCOME',
-  //         style: const TextStyle(color: Colors.white, fontSize: 80.0)),
-  //         const Padding(
-  //       padding: EdgeInsets.all(15.0),
-  //       child: const Text(
-  //         'Ut labore et dolore roipi mana aliqua. Enim adeop minim veeniam nostruklad',
-  //         style: TextStyle(color: Colors.white, fontSize: 25.0),
-  //         textAlign: TextAlign.center,
-  //       ),
-  //         )
-  //       ]);
-  //       break;
-  //     case 1:
-  //       container = Column(children: [
-  //         const Text('DISCOVER',
-  //         style: const TextStyle(color: Colors.white, fontSize: 50.0)),
-  //         const Padding(
-  //       padding: EdgeInsets.all(25.0),
-  //       child: Text(
-  //         'Labore ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut ero labore.',
-  //         style: TextStyle(color: Colors.white, fontSize: 30.0),
-  //         textAlign: TextAlign.center,
-  //       ),
-  //         )
-  //       ]);
-  //       break;
-  //     case 2:
-  //       container = Container(
-  //           child: Column(
-  //         children: [
-  //           const Text(
-  //             'Bringing Sewerag fitting\nSolutions to To Your Home',
-  //             style: const TextStyle(color: Colors.white, fontSize: 30.0),
-  //             textAlign: TextAlign.center,
-  //           ),
-  //           const SizedBox(height: 150.0),
-  //         ],
-  //       ));
-  //       break;
-  //     case 3:
-  //       container = Container(
-  //         child: Column(
-  //           children: [
-  //             const Text(
-  //               'Find the Right Cure for Your\nSeverage Systems',
-  //               style: TextStyle(color: Colors.white, fontSize: 30.0),
-  //               textAlign: TextAlign.center,
-  //             ),
-  //             IconButton(
-  //               onPressed: gotoNextPage,
-  //               icon: Image.asset('assets/images/lets_start_button.png'),
-  //               iconSize: 150,
-  //             )
-  //           ],
-  //         ),
-  //       );
-  //       break;
-  //   }
-  //   return container;
-  // }
 }

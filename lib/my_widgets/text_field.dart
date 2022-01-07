@@ -11,16 +11,18 @@ class MyTextField extends StatelessWidget {
   final active;
   final icon;
   final text;
+  final label;
 
   const MyTextField(
       {Key? key,
       this.active = true,
       this.text = '',
       this.type,
+      this.label = '',
       // ignore: avoid_init_to_null
       this.icon = null,
       this.length,
-      required this.hint,
+      this.hint = '',
       this.isPassword = false,
       this.myController})
       : super(key: key);
@@ -47,6 +49,12 @@ class MyTextField extends StatelessWidget {
             errorBorder: InputBorder.none,
             disabledBorder: InputBorder.none,
             counterText: '',
+            /* label: Text(
+              label,
+              style: const TextStyle(color: Colors.black),
+            ),
+            floatingLabelBehavior: FloatingLabelBehavior.always,
+            floatingLabelStyle: const TextStyle(color: Colors.black), */
             contentPadding: const EdgeInsets.all(20)),
       ),
     );

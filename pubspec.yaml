@@ -102,6 +102,8 @@ flutter:
     - assets/images/message.png
     - assets/images/mail.png
     - assets/images/mobile.png
+    - assets/images/browse_photo_btn.png
+    - assets/images/open_camera_btn.png
 
   fonts:
     - family: Amsi

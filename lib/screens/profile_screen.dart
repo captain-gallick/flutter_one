@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app_one/constants/app_urls.dart';
@@ -21,15 +22,27 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
-  final phoneController = TextEditingController();
-  final addController = TextEditingController();
+  //final phoneController = TextEditingController();
+  //final addressController = TextEditingController();
+  //final aadharController = TextEditingController();
+  final buildingController = TextEditingController();
+  final areaController = TextEditingController();
+  final wardController = TextEditingController();
+  final pincodeController = TextEditingController();
+  final cityController = TextEditingController();
 
   @override
   void dispose() {
     nameController.dispose();
     emailController.dispose();
-    phoneController.dispose();
-    addController.dispose();
+    //phoneController.dispose();
+    //addressController.dispose();
+    //aadharController.dispose();
+    buildingController.dispose();
+    areaController.dispose();
+    wardController.dispose();
+    pincodeController.dispose();
+    cityController.dispose();
 
     super.dispose();
   }
@@ -83,9 +96,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     UserPreferences().getUser().then((value) {
       nameController.text = value.name;
       emailController.text = value.email;
-
-      addController.text = value.address;
-      phoneController.text = value.phone;
+      buildingController.text = value.building;
+      areaController.text = value.area;
+      wardController.text = value.ward;
+      cityController.text = value.city;
+      pincodeController.text = value.pincode;
+      //aadharController.text = value.aadhar;
+      //phoneController.text = value.phone;
     });
 
     return Container(
@@ -110,28 +127,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 key: null,
                 myController: emailController,
               ),
-              heading('Phone'),
+              /* heading('Phone'),
               MyTextField(
                 length: 10,
                 type: TextInputType.phone,
                 hint: "Enter your Phone Number",
                 key: null,
                 myController: phoneController,
-              ),
-              heading('Address'),
+              ), */
+              /* heading('Address'),
               MyTextField(
                 type: TextInputType.streetAddress,
                 hint: "Enter your Address",
                 key: null,
-                myController: addController,
+                myController: addressController,
+              ),
+              heading('Aadhar Number'),
+              MyTextField(
+                length: 12,
+                type: TextInputType.number,
+                hint: "Enter your Aadhar Number",
+                key: null,
+                myController: aadharController,
+              ),*/
+              heading('Building Name'),
+              MyTextField(
+                type: TextInputType.streetAddress,
+                hint: "Enter your Building Name",
+                key: null,
+                myController: buildingController,
+              ),
+              heading('Area'),
+              MyTextField(
+                type: TextInputType.streetAddress,
+                hint: "Enter your Area",
+                key: null,
+                myController: areaController,
+              ),
+              heading('Ward'),
+              MyTextField(
+                type: TextInputType.streetAddress,
+                hint: "Enter your Ward",
+                key: null,
+                myController: wardController,
+              ),
+              heading('Pincode'),
+              MyTextField(
+                length: 6,
+                type: TextInputType.number,
+                hint: "Enter your Pincode",
+                key: null,
+                myController: pincodeController,
+              ),
+              heading('City'),
+              MyTextField(
+                type: TextInputType.streetAddress,
+                hint: "Enter your City",
+                key: null,
+                myController: cityController,
               ),
               const SizedBox(
                 height: 40.0,
               ),
               AppButton(
                   title: 'Update',
-                  onPressed: () async {
-                    await updateProfile();
+                  onPressed: () {
+                    updateProfile();
                   })
             ]));
   }
@@ -175,33 +236,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> updateProfile() async {
-    String id = '';
-    await UserPreferences().getId().then((value) => id = value);
+    String token = '';
+    await UserPreferences().getToken().then((value) => {token = value});
+
     String name = nameController.text;
     String email = emailController.text;
-    String phone = phoneController.text;
-    String address = addController.text;
+    //String phone = phoneController.text;
+    //String address = addressController.text;
+    //String aadhar = aadharController.text;
+    String building = buildingController.text;
+    String area = areaController.text;
+    String ward = wardController.text;
+    String pincode = pincodeController.text;
+    String city = cityController.text;
 
-    if (email.isNotEmpty &&
-        name.isNotEmpty &&
-        address.isNotEmpty &&
-        phone.isNotEmpty &&
-        id.isNotEmpty) {
-      showLoader('Please wait...');
-      final Response response = await post(
-        Uri.parse(AppUrl.updateUser),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'id': id,
-          'email': email,
-          'phone': phone,
-          'address': address,
-          'name': name,
-        }),
-      );
+    showLoader('Please wait...');
+    final Response response = await post(
+      Uri.parse(AppUrl.updateUser),
+      headers: <String, String>{'token': token},
+      body: jsonEncode(<String, String>{
+        'email': email,
+        'name': name,
+        'building': building,
+        'area': area,
+        'ward': ward,
+        'pincode': pincode,
+        'city': city
+      }),
+    );
 
+    if (response.statusCode == 200) {
+      //log(response.body);
       if (!(jsonDecode(response.body).toString().toLowerCase())
           .contains('data')) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -222,7 +287,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Please enter valid email and password"),
+        content: Text("Please enter valid details"),
       ));
     }
   }

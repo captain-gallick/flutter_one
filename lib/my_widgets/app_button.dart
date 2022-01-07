@@ -6,12 +6,11 @@ import 'package:flutter_app_one/utils/app_colors.dart';
 class AppButton extends StatelessWidget {
   final String title;
   final GestureTapCallback onPressed;
+  final double? width;
 
-  const AppButton({
-    Key? key,
-    required this.title,
-    required this.onPressed,
-  }) : super(key: key);
+  const AppButton(
+      {Key? key, required this.title, required this.onPressed, this.width})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +29,7 @@ class AppButton extends StatelessWidget {
                             fontSize: 16.0)),
                   )))),
       height: 40.0,
+      width: width,
       decoration: const BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(10.0)),
           gradient: LinearGradient(

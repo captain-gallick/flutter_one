@@ -100,7 +100,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                 ),
                 ListTile(
                   title: Text(
-                    history[position].service,
+                    history[position].serviceName,
                     style: const TextStyle(fontSize: 22.0),
                   ),
                   subtitle: Text(history[position].addedOn.substring(
@@ -145,10 +145,12 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
     showLoader();
     try {
       history = [];
-      String id = '';
-      await UserPreferences().getId().then((value) => id = value);
-      final Response response =
-          await get(Uri.parse(AppUrl.insertbooking + '/' + id));
+      String token = '';
+      await UserPreferences().getToken().then((value) => token = value);
+
+      final Response response = await get(
+          Uri.parse(AppUrl.insertbooking + '/1'),
+          headers: <String, String>{'token': token});
 
       if (!(jsonDecode(response.body).toString().toLowerCase())
           .contains('data')) {
@@ -156,6 +158,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
           content: Text(jsonDecode(response.body).toString().toUpperCase()),
         ));
       } else {
+        print(response.body);
         List<dynamic> list = jsonDecode(response.body)['data'];
         for (int i = 0; i < list.length; i++) {
           history.add(MyBooking.fromJson(list[i]));

@@ -56,78 +56,83 @@ class BookingDetailsScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Card(
-                        color: Colors.blue.shade50,
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 20.0, horizontal: 5.0),
-                        elevation: 10.0,
-                        shadowColor: Colors.blueAccent,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20.0)),
-                        child: SizedBox(
-                          height: 450,
-                          width: 400,
-                          child: Padding(
-                            padding: const EdgeInsets.all(15.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(20.0),
-                                    child: getImage(),
+                      Flexible(
+                        flex: 3,
+                        child: Card(
+                          color: Colors.blue.shade50,
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 20.0, horizontal: 5.0),
+                          elevation: 10.0,
+                          shadowColor: Colors.blueAccent,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20.0)),
+                          child: SizedBox(
+                            height: 450,
+                            width: 400,
+                            child: Padding(
+                              padding: const EdgeInsets.all(15.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(20.0),
+                                      child: getImage(),
+                                    ),
                                   ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 5.0),
-                                  child: Text(
-                                    'Service Details:',
+                                  const Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(vertical: 5.0),
+                                    child: Text(
+                                      'Service Details:',
+                                      style: TextStyle(fontSize: 20.0),
+                                    ),
+                                  ),
+                                  Text(
+                                    history.serviceName,
+                                    style: const TextStyle(fontSize: 20.0),
+                                  ),
+                                  Text(
+                                    history.sdescr,
+                                    style: const TextStyle(fontSize: 20.0),
+                                  ),
+                                  const Text(
+                                    'Person Details: ',
                                     style: TextStyle(fontSize: 20.0),
                                   ),
-                                ),
-                                Text(
-                                  history.service,
-                                  style: const TextStyle(fontSize: 20.0),
-                                ),
-                                Text(
-                                  history.sdescr,
-                                  style: const TextStyle(fontSize: 20.0),
-                                ),
-                                const Text(
-                                  'Person Details: ',
-                                  style: TextStyle(fontSize: 20.0),
-                                ),
-                                Text(
-                                  history.name,
-                                  style: const TextStyle(fontSize: 20.0),
-                                ),
-                                Text(
-                                  history.email,
-                                  style: const TextStyle(fontSize: 20.0),
-                                ),
-                                Text(
-                                  history.phone,
-                                  style: const TextStyle(fontSize: 20.0),
-                                ),
-                                Text(history.addedOn.substring(
-                                        0, history.addedOn.indexOf(" ")) +
-                                    " | " +
-                                    history.addedOn.substring(
-                                        history.addedOn.indexOf(" ")) +
-                                    " | " +
-                                    ((history.status == '1')
-                                        ? 'Status: OPEN'
-                                        : 'Status: CLOSED'))
-                              ],
+                                  Text(
+                                    history.name,
+                                    style: const TextStyle(fontSize: 20.0),
+                                  ),
+                                  Text(
+                                    history.email,
+                                    style: const TextStyle(fontSize: 20.0),
+                                  ),
+                                  Text(
+                                    history.phone,
+                                    style: const TextStyle(fontSize: 20.0),
+                                  ),
+                                  Text(history.addedOn.substring(
+                                          0, history.addedOn.indexOf(" ")) +
+                                      " | " +
+                                      history.addedOn.substring(
+                                          history.addedOn.indexOf(" ")) +
+                                      " | " +
+                                      ((history.status == '1')
+                                          ? 'Status: OPEN'
+                                          : 'Status: CLOSED'))
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(
-                        height: 60.0,
-                      ),
-                      Align(
-                          alignment: Alignment.bottomCenter,
+                      // const SizedBox(
+                      //   height: 60.0,
+                      // ),
+                      Flexible(
+                        flex: 2,
+                        child: Center(
                           child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: <Widget>[
@@ -153,7 +158,9 @@ class BookingDetailsScreen extends StatelessWidget {
                                       style: TextStyle(
                                           color: Colors.black, fontSize: 20.0),
                                     )),
-                              ]))
+                              ]),
+                        ),
+                      )
                     ]),
               ),
             )));

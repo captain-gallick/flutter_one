@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_app_one/screens/book_track_screen.dart';
 import 'package:flutter_app_one/screens/welcome_screen.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 
 import 'home_screen.dart';
+import 'login_screen.dart';
 
 class MySplashScreen extends StatefulWidget {
   const MySplashScreen({Key? key}) : super(key: key);
@@ -56,13 +58,28 @@ class _MySplashScreenState extends State<MySplashScreen> {
 
   Future<void> checkLogin() async {
     UserPreferences userPreferences = UserPreferences();
-    String token = (await userPreferences.getUser()).name;
-    if (token != '') {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+    String token = (await userPreferences.getUser()).token;
+    if (!await userPreferences.getWelcomeScreenStatus()) {
+      gotoWelcome();
+    } else if (token != '') {
+      gotoBookTrack();
     } else {
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => const WelcomeScreen()));
+      gotoLogin();
     }
+  }
+
+  gotoBookTrack() {
+    Navigator.pushReplacement(context,
+        MaterialPageRoute(builder: (context) => const BookTrackScreen()));
+  }
+
+  gotoWelcome() {
+    Navigator.pushReplacement(context,
+        MaterialPageRoute(builder: (context) => const WelcomeScreen()));
+  }
+
+  gotoLogin() {
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => const LoginScreen()));
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -18,6 +19,7 @@ import 'package:dotted_border/dotted_border.dart';
 class BookServiceScreen extends StatefulWidget {
   final int depId;
   final String serviceName;
+  final String serviceId;
   final String vibhag;
   final String cameraImgPath = '';
 
@@ -26,58 +28,67 @@ class BookServiceScreen extends StatefulWidget {
       String? cameraImgPath,
       required this.depId,
       required this.serviceName,
+      required this.serviceId,
       required this.vibhag})
       : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
     // ignore: no_logic_in_create_state
-    return _BookServiceScreenState(cameraImgPath, depId, serviceName, vibhag);
+    return _BookServiceScreenState(
+        cameraImgPath, depId, serviceName, vibhag, serviceId);
   }
 }
 
 class _BookServiceScreenState extends State<BookServiceScreen> {
   final descriptionController = TextEditingController();
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  //final addressController = TextEditingController();
+  final aadharController = TextEditingController();
+  final buildingController = TextEditingController();
+  final areaController = TextEditingController();
+  final wardController = TextEditingController();
+  final cityController = TextEditingController();
+  final pincodeController = TextEditingController();
 
   final int depId;
   final String serviceName;
+  final String serviceId;
   final String vibhag;
   String cameraImgPath;
 
   String fileName = '';
   late PlatformFile media;
   late UserPreferences prefs;
-  late Future<User> user;
-  late String name;
-  late String phone;
-  late String address;
-  late String email;
 
   @override
   void initState() {
     super.initState();
   }
 
-  _BookServiceScreenState(
-      this.cameraImgPath, this.depId, this.serviceName, this.vibhag);
+  _BookServiceScreenState(this.cameraImgPath, this.depId, this.serviceName,
+      this.vibhag, this.serviceId);
 
   @override
   void dispose() {
     descriptionController.dispose();
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    //addressController.dispose();
+    aadharController.dispose();
+    buildingController.dispose();
+    areaController.dispose();
+    wardController.dispose();
+    cityController.dispose();
+    pincodeController.dispose();
     super.dispose();
   }
 
   late BuildContext dialogContext;
   late BuildContext buildContext;
-
-  Future<UserPreferences> _setupUser() async {
-    prefs = UserPreferences();
-    prefs.getName().then((value) => name = value);
-    prefs.getEmail().then((value) => email = value);
-    prefs.getAddress().then((value) => address = value);
-    prefs.getPhone().then((value) => phone = value);
-    return prefs;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,16 +127,7 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
                 ),
                 body: Container(
                     padding: const EdgeInsets.all(10.0),
-                    child: SingleChildScrollView(
-                        child: FutureBuilder(
-                            future: _setupUser(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                return bookingForm();
-                              } else {
-                                return const CircularProgressIndicator();
-                              }
-                            }))))
+                    child: SingleChildScrollView(child: bookingForm())))
           ],
         ),
       ),
@@ -141,6 +143,34 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
   }
 
   Container bookingForm() {
+    if (fileName != '') {
+      UserPreferences().getTempData().then((value) => {
+            nameController.text = value[0],
+            emailController.text = value[1],
+            phoneController.text = value[2],
+            buildingController.text = value[3],
+            areaController.text = value[4],
+            wardController.text = value[5],
+            pincodeController.text = value[6],
+            cityController.text = value[7],
+          });
+    } else {
+      UserPreferences().getUser().then((value) {
+        UserPreferences().saveTempData(value.name, value.email, value.phone,
+            value.building, value.area, value.ward, value.pincode, value.city);
+        UserPreferences().getTempData().then((value) => {
+              nameController.text = value[0],
+              emailController.text = value[1],
+              phoneController.text = value[2],
+              buildingController.text = value[3],
+              areaController.text = value[4],
+              wardController.text = value[5],
+              pincodeController.text = value[6],
+              cityController.text = value[7],
+            });
+      });
+    }
+
     return Container(
         margin: const EdgeInsets.symmetric(vertical: 70.0),
         padding: const EdgeInsets.all(10.0),
@@ -152,33 +182,43 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
             children: <Widget>[
               heading('Full Name'),
               MyTextField(
-                active: false,
+                active: true,
                 type: TextInputType.name,
-                hint: name,
-                key: null,
+                hint: 'Full Name',
+                myController: nameController,
               ),
               heading('Email'),
               MyTextField(
-                active: false,
+                active: true,
                 type: TextInputType.emailAddress,
-                hint: email,
-                key: null,
+                hint: 'Email',
+                myController: emailController,
               ),
+              /* heading('Aadhar Number'),
+              MyTextField(
+                active: true,
+                length: 12,
+                type: TextInputType.number,
+                hint: 'Adhaar Number',
+                text: adhaar,
+                myController: aadharController,
+              ), */
               heading('Phone'),
               MyTextField(
-                active: false,
                 length: 10,
+                active: true,
                 type: TextInputType.phone,
-                hint: phone,
-                key: null,
+                hint: 'Phone',
+                myController: phoneController,
               ),
-              heading('Address'),
+              /* heading('Address'),
               MyTextField(
-                active: false,
+                active: true,
+                hint: 'Address',
                 type: TextInputType.streetAddress,
-                hint: address,
-                key: null,
-              ),
+                text: address,
+                myController: addressController,
+              ), */
               heading('Department (Vibhag)'),
               MyTextField(
                 active: false,
@@ -188,6 +228,45 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
               MyTextField(
                 active: false,
                 hint: serviceName,
+              ),
+              heading('Building'),
+              MyTextField(
+                active: true,
+                type: TextInputType.streetAddress,
+                myController: buildingController,
+                hint: 'Building',
+              ),
+              heading('Area'),
+              MyTextField(
+                active: true,
+                type: TextInputType.streetAddress,
+                myController: areaController,
+                hint: 'Area',
+              ),
+              heading('Ward'),
+              MyTextField(
+                active: true,
+                type: TextInputType.streetAddress,
+                myController: wardController,
+                key: null,
+                hint: 'Ward',
+              ),
+              heading('City'),
+              MyTextField(
+                active: true,
+                type: TextInputType.streetAddress,
+                myController: cityController,
+                key: null,
+                hint: 'City',
+              ),
+              heading('Pincode'),
+              MyTextField(
+                active: true,
+                type: TextInputType.number,
+                myController: pincodeController,
+                length: 6,
+                key: null,
+                hint: 'Pincode',
               ),
               heading('Short Description'),
               MyTextField(
@@ -202,46 +281,33 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
-                    GestureDetector(
-                      onTap: () {
-                        pickFile();
-                      },
-                      child: DottedBorder(
-                        customPath: (size) {
-                          return Path()
-                            ..moveTo(0, 40)
-                            ..lineTo(size.width, 40);
-                        },
-                        borderType: BorderType.RRect,
-                        padding: const EdgeInsets.all(6),
-                        child: Column(
-                          children: <Widget>[
-                            const Text('Brwose Photo'),
-                            Text(fileName),
-                          ],
-                        ),
-                      ),
+                    Column(
+                      children: <Widget>[
+                        IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            iconSize: 100.0,
+                            onPressed: () {
+                              pickFile();
+                            },
+                            icon: Image.asset(
+                                'assets/images/browse_photo_btn.png')),
+                        Text(fileName),
+                      ],
                     ),
-                    // GestureDetector(
-                    //   onTap: () {
-                    //     showCamera();
-                    //   },
-                    //   child: DottedBorder(
-                    //     customPath: (size) {
-                    //       return Path()
-                    //         ..moveTo(0, 40)
-                    //         ..lineTo(size.width, 40);
-                    //     },
-                    //     borderType: BorderType.RRect,
-                    //     padding: EdgeInsets.all(6),
-                    //     child: Column(
-                    //       children: <Widget>[
-                    //         Text('Open Camera'),
-                    //         Text(cameraImgPath),
-                    //       ],
-                    //     ),
-                    //   ),
-                    // )
+                    /* Column(
+                  children: <Widget>[
+                    IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        iconSize: 100.0,
+                        onPressed: () {
+                          pickFile();
+                        },
+                        icon: Image.asset('assets/images/open_camera_btn.png')),
+                    Text(fileName),
+                  ],
+                ), */
                   ]),
               const SizedBox(
                 height: 40.0,
@@ -259,13 +325,27 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
   }
 
   pickFile() async {
+    UserPreferences().saveTempData(
+        nameController.text,
+        emailController.text,
+        phoneController.text,
+        buildingController.text,
+        areaController.text,
+        wardController.text,
+        pincodeController.text,
+        cityController.text);
+
     FilePickerResult? result = await FilePicker.platform.pickFiles();
 
     if (result != null) {
       final file = result.files.first;
       media = file;
       setState(() {
-        fileName = file.name;
+        if (file.name.length > 10) {
+          fileName = file.name.substring(0, 10);
+        } else {
+          fileName = file.name;
+        }
       });
     } else {
       // User canceled the picker
@@ -310,22 +390,40 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
   }
 
   booknow() async {
-    showLoader(1);
+    String token = '';
+    String lat = '';
+    String lng = '';
+    await UserPreferences().getUser().then(
+        (value) => {token = value.token, lat = value.lat, lng = value.long});
 
-    String descr = descriptionController.text;
+    if (nameController.text.isNotEmpty &&
+        emailController.text.isNotEmpty &&
+        buildingController.text.isNotEmpty &&
+        areaController.text.isNotEmpty &&
+        wardController.text.isNotEmpty &&
+        cityController.text.isNotEmpty &&
+        phoneController.text.length == 10 &&
+        pincodeController.text.length == 6) {
+      showLoader(1);
 
-    var request = MultipartRequest("POST", Uri.parse(AppUrl.insertbooking));
-    UserPreferences preferences = UserPreferences();
-    Future<User> user = preferences.getUser();
-    user.then((value) async {
-      request.fields['user_id'] = value.userId;
-      request.fields['name'] = value.name;
-      request.fields['address'] = value.address;
-      request.fields['email'] = value.email;
-      request.fields['phone'] = value.phone;
-      request.fields['service'] = serviceName;
-      request.fields['department'] = vibhag;
-      request.fields['sdescr'] = descr;
+      var request = MultipartRequest("POST", Uri.parse(AppUrl.insertbooking));
+      request.headers.addAll(<String, String>{"token": token});
+
+      request.fields['name'] = nameController.text;
+      request.fields['email'] = emailController.text;
+      request.fields['phone'] = phoneController.text;
+      request.fields['service'] = serviceId;
+      request.fields['department'] = depId.toString();
+      //request.fields['aadhar'] = aadharController.text;
+      //request.fields['address'] = addressController.text;
+      request.fields['building'] = buildingController.text;
+      request.fields['area'] = areaController.text;
+      request.fields['ward'] = wardController.text;
+      request.fields['pincode'] = pincodeController.text;
+      request.fields['city'] = cityController.text;
+      request.fields['lat'] = lat;
+      request.fields['lng'] = lng;
+      request.fields['sdescr'] = descriptionController.text;
       if (fileName != '') {
         request.files.add(MultipartFile(
             'media',
@@ -342,28 +440,41 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
             filename: cameraImgPath.split("/").last,
             contentType: MediaType('image', 'jpeg')));
       }
-    });
 
-    await request.send().then((value) {
-      if (value.statusCode == 200) {
+      /* log(request.fields.toString());
+      log(request.files.toString());
+      log(request.headers.toString()); */
+
+      var response = await request.send();
+      if (response.statusCode == 200) {
         Navigator.pop(dialogContext);
         showLoader(2);
         Timer(const Duration(seconds: 3), () {
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => const HomeScreen()));
         });
+      } else {
+        Navigator.pop(dialogContext);
+        log(response.statusCode.toString());
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("An Error occured"),
+        ));
       }
-    });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Please enter valid details"),
+      ));
+    }
   }
 
-  showCamera() async {
-    Navigator.pushReplacement(
-        buildContext,
-        MaterialPageRoute(
-            builder: (context) => CameraScreen(
-                  depId: depId,
-                  serviceName: serviceName,
-                  vibhag: vibhag,
-                )));
-  }
+  // showCamera() async {
+  //   Navigator.pushReplacement(
+  //       buildContext,
+  //       MaterialPageRoute(
+  //           builder: (context) => CameraScreen(
+  //                 depId: depId,
+  //                 serviceName: serviceName,
+  //                 vibhag: vibhag,
+  //               )));
+  // }
 }

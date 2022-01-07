@@ -22,18 +22,28 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
-  final addController = TextEditingController();
   final passController = TextEditingController();
   final cPassController = TextEditingController();
+  final buildingController = TextEditingController();
+  final areaController = TextEditingController();
+  final wardController = TextEditingController();
+  final pincodeController = TextEditingController();
+  final cityController = TextEditingController();
+  final aadharController = TextEditingController();
 
   @override
   void dispose() {
     nameController.dispose();
     emailController.dispose();
     phoneController.dispose();
-    addController.dispose();
     passController.dispose();
     cPassController.dispose();
+    buildingController.dispose();
+    areaController.dispose();
+    wardController.dispose();
+    pincodeController.dispose();
+    cityController.dispose();
+    aadharController.dispose();
     super.dispose();
   }
 
@@ -122,12 +132,47 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 key: null,
                 myController: phoneController,
               ),
-              heading('Address'),
+              heading('Building'),
               MyTextField(
                 type: TextInputType.streetAddress,
-                hint: "Enter your Address",
+                hint: "Enter your Building Name",
                 key: null,
-                myController: addController,
+                myController: buildingController,
+              ),
+              heading('Area'),
+              MyTextField(
+                type: TextInputType.streetAddress,
+                hint: "Enter your Area",
+                key: null,
+                myController: areaController,
+              ),
+              heading('Ward'),
+              MyTextField(
+                type: TextInputType.streetAddress,
+                hint: "Enter your Ward",
+                key: null,
+                myController: wardController,
+              ),
+              heading('Pincode'),
+              MyTextField(
+                type: TextInputType.streetAddress,
+                hint: "Enter your Pincode",
+                key: null,
+                myController: pincodeController,
+              ),
+              heading('City'),
+              MyTextField(
+                type: TextInputType.streetAddress,
+                hint: "Enter your City",
+                key: null,
+                myController: cityController,
+              ),
+              heading('Aadhar Number'),
+              MyTextField(
+                type: TextInputType.streetAddress,
+                hint: "Enter your Aadhar Number",
+                key: null,
+                myController: aadharController,
               ),
               heading('Password'),
               MyTextField(
@@ -203,14 +248,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     String name = nameController.text;
     String email = emailController.text;
     String phone = phoneController.text;
-    String address = addController.text;
     String pass = passController.text;
     String cpass = cPassController.text;
+    String building = buildingController.text;
+    String area = areaController.text;
+    String ward = wardController.text;
+    String pincode = pincodeController.text;
+    String city = cityController.text;
+    String aadhar = aadharController.text;
 
     if (email.isNotEmpty &&
         pass.isNotEmpty &&
         name.isNotEmpty &&
-        address.isNotEmpty &&
         phone.isNotEmpty &&
         cpass.isNotEmpty) {
       showLoader('Please wait...');
@@ -220,12 +269,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, String>{
-          'email': email,
-          'phone': phone,
-          'address': address,
-          'name': name,
-          'cpassword': cpass,
-          'password': pass
+          "name": name,
+          "email": email,
+          "phone": phone,
+          "building": building,
+          "area": area,
+          "ward": ward,
+          "pincode": pincode,
+          "city": city,
+          "aadhar": aadhar,
+          "cpassword": pass,
+          "password": cpass
         }),
       );
 
@@ -239,7 +293,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         Navigator.pop(dialogContext);
         showLoader('Registration Successfull!\nLogging in.');
         final Response response = await post(
-          Uri.parse(AppUrl.login),
+          Uri.parse(AppUrl.sendOtp),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },

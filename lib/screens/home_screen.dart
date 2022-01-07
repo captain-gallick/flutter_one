@@ -11,7 +11,10 @@ import 'package:flutter_app_one/data_models/department.dart';
 import 'package:flutter_app_one/data_models/my_services.dart';
 import 'package:flutter_app_one/screens/book_service.dart';
 import 'package:flutter_app_one/screens/slider_screen.dart';
+import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:http/http.dart';
+
+import 'login_screen.dart';
 
 int depId = -1;
 
@@ -56,13 +59,17 @@ class _HomeScreenState extends State<HomeScreen>
     return SafeArea(
       child: WillPopScope(
         onWillPop: () async {
-          if (showDeps == 2) {
-            setState(() {
-              showDeps = -1;
-              getDepartments();
-            });
+          if (_scaffoldKey.currentState!.isDrawerOpen) {
+            Navigator.of(context).pop();
           } else {
-            SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+            if (showDeps == 2) {
+              setState(() {
+                showDeps = -1;
+                getDepartments();
+              });
+            } else {
+              SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+            }
           }
           return false;
         },
@@ -72,7 +79,9 @@ class _HomeScreenState extends State<HomeScreen>
               color: Colors.white,
               child: Scaffold(
                 key: _scaffoldKey,
-                drawer: const SlliderScreen(),
+                drawer: SlliderScreen(
+                  loggedIn: getLoginStatus(),
+                ),
                 body: Column(
                   children: [
                     Row(
@@ -110,11 +119,20 @@ class _HomeScreenState extends State<HomeScreen>
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: const <Widget>[
-                        Text(
-                          'Book A Service',
-                          style: TextStyle(fontSize: 30.0),
-                        ),
+                      children: <Widget>[
+                        (showDeps == -1 || showDeps == 1)
+                            ? const Text(
+                                'Select a Department',
+                                style: TextStyle(fontSize: 30.0),
+                              )
+                            : const Text(
+                                'Book a Service',
+                                style: TextStyle(fontSize: 30.0),
+                              ),
+                        // Text(
+                        //   'Book A Service',
+                        //   style: TextStyle(fontSize: 30.0),
+                        // ),
                       ],
                     ),
                     const SizedBox(
@@ -134,6 +152,18 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
     );
+  }
+
+  getLoginStatus() {
+    String token = '';
+    UserPreferences().getUser().then((value) {
+      token = value.token;
+    });
+    if (token == '') {
+      return false;
+    } else {
+      return true;
+    }
   }
 
   getDepartments() async {
@@ -208,37 +238,47 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   getDepartmentList() {
-    return ListView.builder(
-      scrollDirection: Axis.vertical,
-      shrinkWrap: true,
-      itemCount: departments.length,
-      itemBuilder: (context, position) {
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              depId = int.parse(departments[position].id);
-              showDeps = -1;
-              getServicesByDepartment();
-            });
-          },
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Stack(
-                children: [
-                  Text(
-                    departments[position].name,
-                    style: const TextStyle(fontSize: 22.0),
-                  ),
-                  const Align(
-                      alignment: Alignment.centerRight,
-                      child: Icon(Icons.chevron_right_rounded))
-                ],
+    return Expanded(
+      child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2),
+          itemCount: departments.length,
+          itemBuilder: (context, position) {
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  depId = int.parse(departments[position].id);
+                  showDeps = -1;
+                  getServicesByDepartment();
+                });
+              },
+              child: Card(
+                shadowColor: Colors.blueAccent,
+                elevation: 5,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Flexible(
+                      flex: 7,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Image.network(
+                            AppUrl.baseDomain + departments[position].icon),
+                      ),
+                    ),
+                    Flexible(
+                      flex: 3,
+                      child: Text(
+                        departments[position].name,
+                        style: const TextStyle(fontSize: 18.0),
+                      ),
+                    )
+                  ],
+                ),
               ),
-            ),
-          ),
-        );
-      },
+            );
+          }),
     );
   }
 
@@ -278,97 +318,132 @@ class _CarouselWithIndicatorState extends State<CarouselWithIndicatorDemo> {
   @override
   Widget build(BuildContext context) {
     // ignore: avoid_unnecessary_containers
-    return Column(
-      children: [
-        Builder(
-          builder: (context) {
-            return CarouselSlider(
-              carouselController: _controller,
-              options: CarouselOptions(
-                  height: 450.0,
-                  enlargeCenterPage: false,
-                  autoPlay: false,
-                  enableInfiniteScroll: false,
-                  onPageChanged: (index, reason) {
-                    setState(() {
-                      _current = index;
-                    });
-                  }),
-              items: services
-                  .map((item) => GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => BookServiceScreen(
-                                      depId: depId,
-                                      serviceName: item.title,
-                                      vibhag: item.vibhag)));
-                        },
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 20.0, horizontal: 5.0),
-                          elevation: 10.0,
-                          shadowColor: Colors.blueAccent,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20.0)),
-                          child: SizedBox(
-                            height: 400,
-                            child: Padding(
-                              padding: const EdgeInsets.all(15.0),
-                              child: Column(
-                                children: <Widget>[
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(20.0),
-                                      child: Image.network(
-                                        AppUrl.baseDomain + item.image,
-                                        fit: BoxFit.fill,
-                                      ),
+    if (services.isEmpty) {
+      return const Center(
+          child: Text('No services available for this department.'));
+    } else {
+      return Expanded(
+        child: Column(
+          children: [
+            Flexible(
+              flex: 2,
+              child: Builder(
+                builder: (context) {
+                  return CarouselSlider(
+                    carouselController: _controller,
+                    options: CarouselOptions(
+                        height: 450.0,
+                        enlargeCenterPage: false,
+                        autoPlay: false,
+                        enableInfiniteScroll: false,
+                        onPageChanged: (index, reason) {
+                          setState(() {
+                            _current = index;
+                          });
+                        }),
+                    items: services
+                        .map((item) => GestureDetector(
+                              onTap: () async {
+                                String token = '';
+                                await UserPreferences()
+                                    .getUser()
+                                    .then((value) => {token = value.token});
+                                if (token == '') {
+                                  Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const LoginScreen()));
+                                } else {
+                                  Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              BookServiceScreen(
+                                                depId: depId,
+                                                serviceName: item.title,
+                                                vibhag: item.vibhag,
+                                                serviceId: item.id,
+                                              )));
+                                }
+                              },
+                              child: Card(
+                                margin: const EdgeInsets.symmetric(
+                                    vertical: 20.0, horizontal: 5.0),
+                                elevation: 10.0,
+                                shadowColor: Colors.blueAccent,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20.0)),
+                                child: SizedBox(
+                                  height: 400,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(15.0),
+                                    child: Column(
+                                      children: <Widget>[
+                                        Expanded(
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(20.0),
+                                            child: Image.network(
+                                              AppUrl.baseDomain + item.image,
+                                              fit: BoxFit.fill,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: 40.0,
+                                        ),
+                                        Text(
+                                          item.title,
+                                          style:
+                                              const TextStyle(fontSize: 25.0),
+                                        ),
+                                        const SizedBox(
+                                          height: 40.0,
+                                        )
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(
-                                    height: 40.0,
-                                  ),
-                                  Text(
-                                    item.title,
-                                    style: const TextStyle(fontSize: 25.0),
-                                  ),
-                                  const SizedBox(
-                                    height: 40.0,
-                                  )
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
-                      ))
-                  .toList(),
-            );
-          },
-        ),
-        const SizedBox(
-          height: 60.0,
-        ),
-        Align(
-            alignment: Alignment.bottomCenter,
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: services.asMap().entries.map((entry) {
-                  return Container(
-                    width: 10.0,
-                    height: 10.0,
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 8.0, horizontal: 4.0),
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: (Theme.of(context).brightness == Brightness.light
-                                ? Colors.green
-                                : Colors.white)
-                            .withOpacity(_current == entry.key ? 1.0 : 0.4)),
+                            ))
+                        .toList(),
                   );
-                }).toList()))
-      ],
-    );
+                },
+              ),
+            ),
+            // const Flexible(
+            //   flex: 1,
+            //   child: SizedBox(
+            //     height: 60.0,
+            //   ),
+            // ),
+            Flexible(
+              flex: 1,
+              child: Center(
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: services.asMap().entries.map((entry) {
+                      return Container(
+                        width: 10.0,
+                        height: 10.0,
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 8.0, horizontal: 4.0),
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: (Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? Colors.green
+                                    : Colors.white)
+                                .withOpacity(
+                                    _current == entry.key ? 1.0 : 0.4)),
+                      );
+                    }).toList()),
+              ),
+            )
+          ],
+        ),
+      );
+    }
   }
 }
