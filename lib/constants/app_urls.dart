@@ -1,12 +1,11 @@
 class AppUrl {
-  static const String baseDomain = 'https://svtindia.in/maljalorg/';
-  static const String baseURL =
-      "https://svtindia.in/maljalorg/api/authentication";
+  static const String baseDomain = 'http://maljal.org/';
+  static const String baseURL = "http://maljal.org/api/authentication";
   static const String sendOtp = baseURL + "/login";
   static const String verifyOtp = baseURL + "/verify";
   static const String register = baseURL + "/registration";
 
-  static const String baseServices = 'https://svtindia.in/maljalorg/api';
+  static const String baseServices = 'http://maljal.org/api';
 
   static const String departments = baseServices + "/departments";
   static const String services = baseServices + "/services";
@@ -14,8 +13,8 @@ class AppUrl {
 
   static const String insertbooking = baseServices + "/booking";
 
-  static const String imageUrl =
-      'https://svtindia.in/maljalorg/assets/uploads/';
+  static const String imageUrl = 'http://maljal.org/assets/uploads/';
 
-  static const String updateUser = 'https://svtindia.in/maljalorg/api/user';
+  static const String updateUser = 'http://maljal.org/api/user';
+  static const String search = 'http://maljal.org/api/services/search/';
 }

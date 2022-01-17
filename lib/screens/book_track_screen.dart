@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_app_one/my_widgets/app_button.dart';
 import 'package:flutter_app_one/screens/registration_screen.dart';
 
+import 'booking_history.dart';
 import 'home_screen.dart';
 
 class BookTrackScreen extends StatefulWidget {
@@ -51,7 +52,15 @@ class _BookTrackScreenState extends State<BookTrackScreen> {
                   height: 40.0,
                 ),
                 AppButton(
-                    title: 'TRACK A SERVICE', width: 200.0, onPressed: () {}),
+                    title: 'TRACK A SERVICE',
+                    width: 200.0,
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  const BookingHistoryScreen()));
+                    }),
               ],
             ))
           ],

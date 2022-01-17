@@ -5,13 +5,24 @@ import 'package:flutter_app_one/screens/booking_history.dart';
 import 'package:flutter_app_one/screens/contact_screen.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
 
-class BookingDetailsScreen extends StatelessWidget {
+class BookingDetailsScreen extends StatefulWidget {
   final MyBooking history;
+
   const BookingDetailsScreen({Key? key, required this.history})
       : super(key: key);
 
   @override
+  State<BookingDetailsScreen> createState() => _BookingDetailsScreenState();
+}
+
+class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
+  late BuildContext buildContext;
+
+  late BuildContext dialogContext;
+
+  @override
   Widget build(BuildContext context) {
+    buildContext = context;
     return SafeArea(
         child: WillPopScope(
             onWillPop: () async {
@@ -89,11 +100,15 @@ class BookingDetailsScreen extends StatelessWidget {
                                     ),
                                   ),
                                   Text(
-                                    history.serviceName,
+                                    widget.history.serviceName,
                                     style: const TextStyle(fontSize: 20.0),
                                   ),
+                                  const Text(
+                                    'Description: ',
+                                    style: TextStyle(fontSize: 20.0),
+                                  ),
                                   Text(
-                                    history.sdescr,
+                                    widget.history.sdescr,
                                     style: const TextStyle(fontSize: 20.0),
                                   ),
                                   const Text(
@@ -101,24 +116,24 @@ class BookingDetailsScreen extends StatelessWidget {
                                     style: TextStyle(fontSize: 20.0),
                                   ),
                                   Text(
-                                    history.name,
+                                    widget.history.name,
                                     style: const TextStyle(fontSize: 20.0),
                                   ),
                                   Text(
-                                    history.email,
+                                    widget.history.email,
                                     style: const TextStyle(fontSize: 20.0),
                                   ),
                                   Text(
-                                    history.phone,
+                                    widget.history.phone,
                                     style: const TextStyle(fontSize: 20.0),
                                   ),
-                                  Text(history.addedOn.substring(
-                                          0, history.addedOn.indexOf(" ")) +
+                                  Text(widget.history.addedOn.substring(0,
+                                          widget.history.addedOn.indexOf(" ")) +
                                       " | " +
-                                      history.addedOn.substring(
-                                          history.addedOn.indexOf(" ")) +
+                                      widget.history.addedOn.substring(
+                                          widget.history.addedOn.indexOf(" ")) +
                                       " | " +
-                                      ((history.status == '1')
+                                      ((widget.history.status == '1')
                                           ? 'Status: OPEN'
                                           : 'Status: CLOSED'))
                                 ],
@@ -149,7 +164,7 @@ class BookingDetailsScreen extends StatelessWidget {
                                         context,
                                         MaterialPageRoute(
                                             builder: (BuildContext context) =>
-                                                ContactScreen(history)),
+                                                ContactScreen(widget.history)),
                                         (route) => false,
                                       );
                                     },
@@ -167,17 +182,43 @@ class BookingDetailsScreen extends StatelessWidget {
   }
 
   getImage() {
-    if (history.media != '') {
-      return Align(
-          alignment: Alignment.topCenter,
-          child: ClipRRect(
-              borderRadius: BorderRadius.circular(20.0),
-              child: Image.network(
-                AppUrl.imageUrl + history.media,
-                fit: BoxFit.cover,
-              )));
+    if (widget.history.media != '') {
+      return GestureDetector(
+        onTap: () {
+          showImage(widget.history.media);
+        },
+        child: Align(
+            alignment: Alignment.topCenter,
+            child: ClipRRect(
+                borderRadius: BorderRadius.circular(20.0),
+                child: Image.network(
+                  AppUrl.imageUrl + widget.history.media,
+                  fit: BoxFit.cover,
+                ))),
+      );
     } else {
       return const Center(child: Text('No Image Available'));
     }
+  }
+
+  void showImage(image) {
+    showDialog(
+        barrierDismissible: true,
+        context: buildContext,
+        builder: (BuildContext context) {
+          dialogContext = context;
+          return WillPopScope(
+              child: Dialog(
+                backgroundColor: Colors.transparent,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Image.network(
+                    AppUrl.imageUrl + widget.history.media,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              onWillPop: () async => true);
+        });
   }
 }

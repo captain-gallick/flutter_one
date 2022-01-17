@@ -12,6 +12,7 @@ class MyTextField extends StatelessWidget {
   final icon;
   final text;
   final label;
+  final alignment;
 
   const MyTextField(
       {Key? key,
@@ -24,7 +25,8 @@ class MyTextField extends StatelessWidget {
       this.length,
       this.hint = '',
       this.isPassword = false,
-      this.myController})
+      this.myController,
+      this.alignment = TextAlign.start})
       : super(key: key);
 
   @override
@@ -40,6 +42,7 @@ class MyTextField extends StatelessWidget {
         maxLength: length,
         controller: myController,
         obscureText: isPassword,
+        textAlign: alignment,
         decoration: InputDecoration(
             hintText: hint,
             border: InputBorder.none,

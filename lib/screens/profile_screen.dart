@@ -1,9 +1,7 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app_one/constants/app_urls.dart';
-import 'package:flutter_app_one/data_models/user.dart';
 import 'package:flutter_app_one/my_widgets/app_button.dart';
 import 'package:flutter_app_one/my_widgets/text_field.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
@@ -275,11 +273,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Navigator.pop(dialogContext);
       } else {
         Navigator.pop(dialogContext);
-        User user = User.fromJson(jsonDecode(response.body)['data']);
+
+        var data = jsonDecode(response.body)['data'];
+
+        /* log(data['name'] +
+            "--" +
+            data['email'] +
+            "--" +
+            data['building'] +
+            "--" +
+            data['area'] +
+            "--" +
+            data['pincode'] +
+            "--" +
+            data['ward'] +
+            "--" +
+            data['city']); */
 
         UserPreferences userPreferences = UserPreferences();
 
-        await userPreferences.saveUser(user);
+        await userPreferences.updateUser(
+            data['name'],
+            data['email'],
+            data['building'],
+            data['area'],
+            data['pincode'],
+            data['ward'],
+            data['city']);
         showLoader('Profile Successfully Updated!');
         setState(() {
           Navigator.pop(dialogContext);

@@ -25,6 +25,19 @@ class UserPreferences {
     return true;
   }
 
+  updateUser(String name, String email, String building, String area,
+      String pincode, String ward, String city) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("name", name);
+    prefs.setString("email", email);
+    prefs.setString("building", building);
+    prefs.setString("area", area);
+    prefs.setString("ward", ward);
+    prefs.setString("pincode", pincode);
+    prefs.setString("city", city);
+    return true;
+  }
+
   setWelcomeScreenStatus(value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool("shown", value);

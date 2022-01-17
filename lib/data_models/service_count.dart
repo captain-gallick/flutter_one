@@ -1,9 +1,13 @@
 class ServiceCount {
   String name;
-  String count;
+  int count;
 
   ServiceCount({
     required this.name,
-    required this.count,
+    this.count = 0,
   });
+
+  factory ServiceCount.fromJson(Map<String, dynamic> responseData) {
+    return ServiceCount(name: responseData['title']);
+  }
 }

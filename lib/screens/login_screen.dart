@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -7,10 +8,14 @@ import 'package:flutter_app_one/constants/app_urls.dart';
 import 'package:flutter_app_one/data_models/user.dart';
 import 'package:flutter_app_one/my_widgets/text_field.dart';
 import 'package:flutter_app_one/screens/book_track_screen.dart';
+import 'package:flutter_app_one/screens/profile_screen.dart';
 import 'package:flutter_app_one/screens/registration_screen.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:http/http.dart';
+import 'package:flutter_app_one/utils/globals.dart' as globals;
 
+import 'book_service.dart';
+import 'booking_history.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -23,13 +28,41 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   late String _phone, _otp;
   final phoneController = TextEditingController();
-  final otpController = TextEditingController();
+  final TextEditingController otpController = TextEditingController();
   bool showOTP = false;
+  //final scaffoldKey = GlobalKey();
+  //late OTPTextEditController otpController;
+  //final OTPInteractor _otpInteractor = OTPInteractor();
 
   @override
-  void dispose() {
-    phoneController.dispose();
+  void initState() {
+    super.initState();
+
+    //_otpInteractor = OTPInteractor();
+    /* _otpInteractor.startListenUserConsent('VM-MOURJA');
+    /* .getAppSignature()
+        //ignore: avoid_print
+        .then((value) => print('signature - $value')); */
+
+    otpController = OTPTextEditController(
+      codeLength: 6,
+      //ignore: avoid_print
+      onCodeReceive: (code) => print('Your Application receive code - $code'),
+      otpInteractor: _otpInteractor,
+    )..startListenUserConsent(
+        (code) {
+          final exp = RegExp(r'(\d{6})');
+          return exp.stringMatch(code ?? '') ?? '';
+        },
+      ); */
+  }
+
+  @override
+  Future<void> dispose() async {
+    //await _otpInteractor.stopListenForCode();
+    //await otpController.stopListen();
     otpController.dispose();
+    phoneController.dispose();
     super.dispose();
   }
 
@@ -85,6 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
         MyTextField(
           myController: phoneController,
           type: TextInputType.phone,
+          alignment: TextAlign.center,
           length: 10,
           hint: 'Phone Number',
         ),
@@ -101,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         Center(
           child: TextButton(
-            onPressed: gotoBookTrack,
+            onPressed: gotoHome,
             child: const Text('SKIP'),
           ),
         ),
@@ -122,16 +156,31 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 60.0),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(20.0, 0.0, 0.0, 20.0),
-          child: Align(
-              alignment: Alignment.centerLeft, child: Text('Enter the OTP')),
+        const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Enter the OTP',
+              style: TextStyle(fontSize: 17),
+            )),
+        Row(
+          children: <Widget>[
+            Text('sent to ${phoneController.text}'),
+            TextButton(
+                onPressed: () {
+                  showAlertDialog();
+                },
+                child: const Text(
+                  'change?',
+                  style: TextStyle(decoration: TextDecoration.underline),
+                ))
+          ],
         ),
         MyTextField(
           myController: otpController,
           type: TextInputType.number,
           length: 6,
           hint: 'OTP',
+          alignment: TextAlign.center,
         ),
         Center(
           child: IconButton(
@@ -330,7 +379,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!(jsonDecode(response.body).toString().toLowerCase())
           .contains('success')) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(jsonDecode(response.body).toString().toUpperCase()),
+          content: Text(
+              jsonDecode(response.body)['message'].toString().toUpperCase()),
         ));
         Navigator.pop(dialogContext);
       } else {
@@ -340,12 +390,48 @@ class _LoginScreenState extends State<LoginScreen> {
 
         await userPreferences.saveUser(user);
 
-        gotoHome();
+        checkPath();
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Please enter a valid Phone Number."),
       ));
     }
+  }
+
+  checkPath() {
+    if (globals.gotoBookingHistory) {
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const BookingHistoryScreen()));
+    } else if (globals.gotoProfile) {
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const ProfileScreen()));
+    } else if (globals.gotoBookService) {
+      var item = globals.item;
+      if (item != null) {
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => BookServiceScreen(
+                      depId: depId,
+                      serviceName: item.title,
+                      vibhag: item.vibhag,
+                      serviceId: item.id,
+                    )));
+      }
+    } else {
+      gotoBookTrack();
+    }
+    clearGlobals();
+  }
+
+  clearGlobals() {
+    globals.depId = -1;
+    globals.item;
+    globals.gotoBookService = false;
+    globals.gotoBookingHistory = false;
+    globals.gotoProfile = false;
   }
 }

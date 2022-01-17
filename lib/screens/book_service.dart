@@ -6,15 +6,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_one/constants/app_urls.dart';
-import 'package:flutter_app_one/data_models/user.dart';
 import 'package:flutter_app_one/my_widgets/text_field.dart';
-import 'package:flutter_app_one/screens/camera_screen.dart';
 import 'package:flutter_app_one/screens/home_screen.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:http/http.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:dotted_border/dotted_border.dart';
 
 class BookServiceScreen extends StatefulWidget {
   final int depId;
@@ -206,7 +203,7 @@ class _BookServiceScreenState extends State<BookServiceScreen> {
               heading('Phone'),
               MyTextField(
                 length: 10,
-                active: true,
+                active: false,
                 type: TextInputType.phone,
                 hint: 'Phone',
                 myController: phoneController,

@@ -10,11 +10,17 @@ import 'package:flutter_app_one/constants/app_urls.dart';
 import 'package:flutter_app_one/data_models/department.dart';
 import 'package:flutter_app_one/data_models/my_services.dart';
 import 'package:flutter_app_one/screens/book_service.dart';
-import 'package:flutter_app_one/screens/slider_screen.dart';
+import 'package:flutter_app_one/screens/search_screen.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:http/http.dart';
 
+import 'book_track_screen.dart';
+import 'booking_history.dart';
 import 'login_screen.dart';
+import 'profile_screen.dart';
+import 'splash_screen.dart';
+
+import 'package:flutter_app_one/utils/globals.dart' as globals;
 
 int depId = -1;
 
@@ -31,25 +37,32 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  late AnimationController animationController;
+  //late AnimationController animationController;
   int showDeps = -1;
 
   late double width;
+  bool loggedIn = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => getDepartments());
-    animationController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 250));
+    /* animationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 250)); */
+  }
+
+  @override
+  void dispose() {
+    // animationController.dispose();
+    super.dispose();
   }
 
   final double maxSlide = 400.0;
   final CarouselController controller = CarouselController();
 
-  void toggle() => animationController.isDismissed
+  /* void toggle() => animationController.isDismissed
       ? animationController.forward()
-      : animationController.reverse();
+      : animationController.reverse(); */
 
   //bool _canBeDragged = false;
 
@@ -68,7 +81,14 @@ class _HomeScreenState extends State<HomeScreen>
                 getDepartments();
               });
             } else {
-              SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+              if (loggedIn) {
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const BookTrackScreen()));
+              } else {
+                SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+              }
             }
           }
           return false;
@@ -79,8 +99,8 @@ class _HomeScreenState extends State<HomeScreen>
               color: Colors.white,
               child: Scaffold(
                 key: _scaffoldKey,
-                drawer: SlliderScreen(
-                  loggedIn: getLoginStatus(),
+                drawer: Drawer(
+                  child: getDrawer(),
                 ),
                 body: Column(
                   children: [
@@ -117,8 +137,8 @@ class _HomeScreenState extends State<HomeScreen>
                       height: 20.0,
                     ),
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: <Widget>[
                         (showDeps == -1 || showDeps == 1)
                             ? const Text(
@@ -129,10 +149,29 @@ class _HomeScreenState extends State<HomeScreen>
                                 'Book a Service',
                                 style: TextStyle(fontSize: 30.0),
                               ),
-                        // Text(
-                        //   'Book A Service',
-                        //   style: TextStyle(fontSize: 30.0),
-                        // ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const SearchScreen()));
+                          },
+                          child: Container(
+                            decoration: const BoxDecoration(color: Colors.grey),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: const <Widget>[
+                                  Text(
+                                    'Search',
+                                  ),
+                                  Icon(Icons.search)
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(
@@ -154,15 +193,107 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  getLoginStatus() {
+  getDrawer() {
+    return Column(
+      children: [
+        Expanded(
+          flex: 1,
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.85,
+            child: DrawerHeader(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Image.asset('assets/images/logo.png'),
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: ListView(children: [
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: ListTile(
+                title: const Text("Booking History",
+                    style: TextStyle(fontSize: 20.0)),
+                onTap: () {
+                  if (loggedIn) {
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                const BookingHistoryScreen()));
+                  } else {
+                    globals.gotoBookingHistory = true;
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()));
+                  }
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: ListTile(
+                title: const Text("Profile", style: TextStyle(fontSize: 20.0)),
+                onTap: () {
+                  if (loggedIn) {
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ProfileScreen()));
+                  } else {
+                    globals.gotoProfile = true;
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()));
+                  }
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: (loggedIn
+                  ? ListTile(
+                      title: const Text("Logout",
+                          style: TextStyle(fontSize: 20.0)),
+                      onTap: () {
+                        UserPreferences prefs = UserPreferences();
+                        prefs.removeUser();
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const MySplashScreen()));
+                      },
+                    )
+                  : ListTile(
+                      title:
+                          const Text("Login", style: TextStyle(fontSize: 20.0)),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const LoginScreen()));
+                      },
+                    )),
+            ),
+          ]),
+        )
+      ],
+    );
+  }
+
+  getLoginStatus() async {
     String token = '';
-    UserPreferences().getUser().then((value) {
+    await UserPreferences().getUser().then((value) {
       token = value.token;
     });
     if (token == '') {
-      return false;
+      loggedIn = false;
     } else {
-      return true;
+      loggedIn = true;
     }
   }
 
@@ -185,6 +316,7 @@ class _HomeScreenState extends State<HomeScreen>
       //print('hello:' + departments.length.toString());
     } catch (e) {}
     Navigator.pop(dialogContext);
+    getLoginStatus();
   }
 
   getServicesByDepartment() async {
@@ -344,28 +476,7 @@ class _CarouselWithIndicatorState extends State<CarouselWithIndicatorDemo> {
                     items: services
                         .map((item) => GestureDetector(
                               onTap: () async {
-                                String token = '';
-                                await UserPreferences()
-                                    .getUser()
-                                    .then((value) => {token = value.token});
-                                if (token == '') {
-                                  Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const LoginScreen()));
-                                } else {
-                                  Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              BookServiceScreen(
-                                                depId: depId,
-                                                serviceName: item.title,
-                                                vibhag: item.vibhag,
-                                                serviceId: item.id,
-                                              )));
-                                }
+                                checkLogin(item);
                               },
                               child: Card(
                                 margin: const EdgeInsets.symmetric(
@@ -445,5 +556,35 @@ class _CarouselWithIndicatorState extends State<CarouselWithIndicatorDemo> {
         ),
       );
     }
+  }
+
+  checkLogin(item) async {
+    String token = '';
+    await UserPreferences().getUser().then((value) => {token = value.token});
+    if (token == '') {
+      globals.depId = depId;
+      globals.item = item;
+      globals.gotoBookService = true;
+      gotoLogin();
+    } else {
+      gotoBookService(item);
+    }
+  }
+
+  gotoBookService(item) {
+    Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => BookServiceScreen(
+                  depId: depId,
+                  serviceName: item.title,
+                  vibhag: item.vibhag,
+                  serviceId: item.id,
+                )));
+  }
+
+  gotoLogin() {
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => const LoginScreen()));
   }
 }
