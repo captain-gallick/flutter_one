@@ -42,11 +42,15 @@ dependencies:
   async: ^2.8.2
   file_picker: ^4.2.5
   dotted_border: ^2.0.0+1
-  camera: ^0.9.4+5
   open_file: ^3.2.1
   flutter_lints: ^1.0.4
   otp_autofill: ^2.1.0
   sms_autofill: ^2.2.0
+  google_maps_flutter: ^2.1.1
+  location: ^4.3.0
+  flutter_polyline_points: ^1.0.0
+  dio: ^4.0.4
+  url_launcher: ^6.0.20
 
 dev_dependencies:
   flutter_test:
@@ -106,6 +110,8 @@ flutter:
     - assets/images/mobile.png
     - assets/images/browse_photo_btn.png
     - assets/images/open_camera_btn.png
+    - assets/images/map_pin.png
+    - assets/images/car_icon.png
 
   fonts:
     - family: Amsi

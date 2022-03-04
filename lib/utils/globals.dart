@@ -7,3 +7,7 @@ MyServices? item;
 bool gotoBookService = false;
 bool gotoBookingHistory = false;
 bool gotoProfile = false;
+String name = '';
+String building = '';
+String ward = '';
+bool locationUpdated = false;

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_app_one/my_widgets/app_button.dart';
 import 'package:flutter_app_one/screens/registration_screen.dart';
+import 'package:flutter_app_one/utils/shared_preferences.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
 
 import 'booking_history.dart';
 import 'home_screen.dart';
@@ -14,6 +17,14 @@ class BookTrackScreen extends StatefulWidget {
 }
 
 class _BookTrackScreenState extends State<BookTrackScreen> {
+  LatLng latLng = const LatLng(0, 0);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) => getCurrentLocation());
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -103,5 +114,36 @@ class _BookTrackScreenState extends State<BookTrackScreen> {
   void gotoRegistrations() {
     Navigator.pushReplacement(context,
         MaterialPageRoute(builder: (context) => const RegistrationScreen()));
+  }
+
+  getCurrentLocation() async {
+    Location location = Location();
+
+    bool _serviceEnabled;
+    PermissionStatus _permissionGranted;
+    LocationData _locationData;
+
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    _locationData = await location.getLocation();
+    double? lat = _locationData.latitude;
+    double? lng = _locationData.longitude;
+    latLng = LatLng(lat ?? 0, lng ?? 0);
+
+    await UserPreferences().setLocation(lat.toString(), lng.toString());
   }
 }

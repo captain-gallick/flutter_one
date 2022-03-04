@@ -19,6 +19,7 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const MySplashScreen(),
+      //home: const TrackerScreen(id: '60'),
     );
   }
 }

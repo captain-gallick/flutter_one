@@ -1,9 +1,14 @@
+import 'dart:developer';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_one/constants/app_urls.dart';
 import 'package:flutter_app_one/data_models/my_bookings.dart';
 import 'package:flutter_app_one/screens/booking_history.dart';
-import 'package:flutter_app_one/screens/contact_screen.dart';
+import 'package:flutter_app_one/screens/tracker_screen.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
+import 'package:flutter_app_one/utils/network_connecttion.dart';
+import 'package:url_launcher/url_launcher.dart' as url_launcher;
 
 class BookingDetailsScreen extends StatefulWidget {
   final MyBooking history;
@@ -19,6 +24,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   late BuildContext buildContext;
 
   late BuildContext dialogContext;
+  bool showTrack = false;
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +117,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                     widget.history.sdescr,
                                     style: const TextStyle(fontSize: 20.0),
                                   ),
+                                  getVideo(widget.history.meadia1.isNotEmpty
+                                      ? 1
+                                      : 2),
                                   const Text(
                                     'Person Details: ',
                                     style: TextStyle(fontSize: 20.0),
@@ -133,9 +142,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                       widget.history.addedOn.substring(
                                           widget.history.addedOn.indexOf(" ")) +
                                       " | " +
-                                      ((widget.history.status == '1')
-                                          ? 'Status: OPEN'
-                                          : 'Status: CLOSED'))
+                                      (getStatus(widget.history.status)))
                                 ],
                               ),
                             ),
@@ -148,37 +155,107 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       Flexible(
                         flex: 2,
                         child: Center(
-                          child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: <Widget>[
-                                OutlinedButton(
-                                    onPressed: () {},
-                                    child: const Text(
-                                      'TRACK',
-                                      style: TextStyle(
-                                          color: Colors.black, fontSize: 20.0),
-                                    )),
-                                OutlinedButton(
-                                    onPressed: () {
-                                      Navigator.pushAndRemoveUntil(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (BuildContext context) =>
-                                                ContactScreen(widget.history)),
-                                        (route) => false,
-                                      );
-                                    },
-                                    child: const Text(
-                                      'CONTACT',
-                                      style: TextStyle(
-                                          color: Colors.black, fontSize: 20.0),
-                                    )),
-                              ]),
+                          child: Visibility(
+                            visible: ((widget.history.status == '1' ||
+                                    widget.history.status == '3')
+                                ? false
+                                : true),
+                            child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: <Widget>[
+                                  OutlinedButton(
+                                      onPressed: () {
+                                        Navigator.pushAndRemoveUntil(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (BuildContext context) =>
+                                                  TrackerScreen(
+                                                    id: widget.history.id,
+                                                  )),
+                                          (route) => false,
+                                        );
+                                      },
+                                      child: const Text(
+                                        'TRACK',
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 20.0),
+                                      )),
+                                  /* OutlinedButton(
+                                      onPressed: () {
+                                        NetworkCheckUp()
+                                            .checkConnection()
+                                            .then((value) {
+                                          if (value) {
+                                            /* Navigator.pushAndRemoveUntil(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder:
+                                                      (BuildContext context) =>
+                                                          ContactScreen(
+                                                              widget.history)),
+                                              (route) => false,
+                                            ); */
+                                          } else {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(const SnackBar(
+                                              content: Text(
+                                                  "Please connect to internet."),
+                                            ));
+                                          }
+                                        });
+                                      },
+                                      child: const Text(
+                                        'CONTACT',
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 20.0),
+                                      )), */
+                                ]),
+                          ),
                         ),
                       )
                     ]),
               ),
             )));
+  }
+
+  getVideo(int i) {
+    if (i == 1) {
+      return GestureDetector(
+        onTap: () {
+          NetworkCheckUp().checkConnection().then((value) {
+            if (value) {
+              url_launcher.launch(AppUrl.imageUrl + widget.history.meadia1);
+              log(AppUrl.imageUrl + widget.history.meadia1);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text("Please connect to internet."),
+              ));
+            }
+          });
+        },
+        child: Text(
+          'open video',
+          style: TextStyle(
+              color: Colors.blue.shade800,
+              decoration: TextDecoration.underline),
+        ),
+      );
+    } else {
+      return const Text('');
+    }
+  }
+
+  getStatus(status) {
+    if (status == '1') {
+      return 'OPEN';
+    } else if (status == '2') {
+      return 'PROCESSING';
+    } else {
+      return 'COMPLETE';
+    }
   }
 
   getImage() {

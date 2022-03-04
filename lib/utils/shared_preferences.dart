@@ -2,40 +2,64 @@ import 'package:flutter_app_one/data_models/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserPreferences {
+  final String _isLoggedIn = 'isLoggedIn';
+
   Future<bool> saveUser(User user) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    prefs.setString("userId", user.userId);
-    prefs.setString("name", user.name);
-    prefs.setString("email", user.email);
-    prefs.setString("phone", user.phone);
-    prefs.setString("token", user.token);
-    prefs.setString("aadhar", user.aadhar);
-    prefs.setString("addedOn", user.addedOn);
-    prefs.setString("status", user.status);
-    //prefs.setString("address", user.address);
-    prefs.setString("building", user.building);
-    prefs.setString("area", user.area);
-    prefs.setString("ward", user.ward);
-    prefs.setString("pincode", user.pincode);
-    prefs.setString("city", user.city);
-    prefs.setString("lat", user.lat);
-    prefs.setString("long", user.long);
-
-    return true;
+    if (await prefs.setBool(_isLoggedIn, true)) {
+      prefs.setString("name", user.name);
+      prefs.setString("email", user.email);
+      prefs.setString("phone", user.phone);
+      prefs.setString("token", user.token);
+      prefs.setString("aadhar", user.aadhar);
+      prefs.setString("building", user.building);
+      prefs.setString("areaid", user.areaId);
+      prefs.setString("areaname", user.areaName);
+      prefs.setString("ward", user.ward);
+      prefs.setString("pincode", user.pincode);
+      prefs.setString("cityid", user.cityId);
+      prefs.setString("cityname", user.cityName);
+      return true;
+    } else {
+      return false;
+    }
   }
 
-  updateUser(String name, String email, String building, String area,
-      String pincode, String ward, String city) async {
+  updateUser(
+      String name,
+      String email,
+      String building,
+      String areaId,
+      String areaName,
+      String pincode,
+      String ward,
+      String cityId,
+      String cityName,
+      String aadhar) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("name", name);
     prefs.setString("email", email);
     prefs.setString("building", building);
-    prefs.setString("area", area);
+    prefs.setString("areaid", areaId);
+    prefs.setString("areaname", areaName);
     prefs.setString("ward", ward);
     prefs.setString("pincode", pincode);
-    prefs.setString("city", city);
+    prefs.setString("cityid", cityId);
+    prefs.setString("cityname", cityName);
+    prefs.setString("aadhar", aadhar);
     return true;
+  }
+
+  setLocation(lat, lng) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("lat", lat);
+    prefs.setString("long", lng);
+    prefs.setBool("updated", true);
+  }
+
+  getLocation() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return {'lat': prefs.getString("lat"), 'lng': prefs.getString("long")};
   }
 
   setWelcomeScreenStatus(value) async {
@@ -103,62 +127,55 @@ class UserPreferences {
     }
   }
 
+  Future<bool> isLoggedIn() async {
+    final SharedPreferences sharedPreferences =
+        await SharedPreferences.getInstance();
+    return sharedPreferences.getBool(_isLoggedIn) ?? false;
+  }
+
   Future<User> getUser() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    if (prefs.containsKey('token')) {
-      String id = prefs.getString('userId') as String;
+    if (prefs.getBool(_isLoggedIn) ?? false) {
       String name = prefs.getString('name') as String;
       String email = prefs.getString('email') as String;
       String phone = prefs.getString('phone') as String;
       String token = prefs.getString('token') as String;
-      String addedOn = prefs.getString('addedOn') as String;
-      String status = prefs.getString('status') as String;
       String aadhar = prefs.getString('aadhar') as String;
-      //String address = prefs.getString('address') as String;
       String building = prefs.getString('building') as String;
-      String area = prefs.getString('area') as String;
+      String areaId = prefs.getString('areaid') as String;
+      String areaName = prefs.getString('areaname') as String;
       String ward = prefs.getString('ward') as String;
       String pincode = prefs.getString('pincode') as String;
-      String city = prefs.getString('city') as String;
-      String lat = prefs.getString('lat') as String;
-      String long = prefs.getString('long') as String;
+      String cityId = prefs.getString('cityid') as String;
+      String cityName = prefs.getString('cityname') as String;
       return User(
-          userId: id,
           name: name,
           email: email,
           phone: phone,
           token: token,
           aadhar: aadhar,
-          status: status,
-          addedOn: addedOn,
-          //address: address,
           building: building,
-          area: area,
+          areaId: areaId,
+          areaName: areaName,
           ward: ward,
-          city: city,
-          pincode: pincode,
-          long: long,
-          lat: lat);
+          cityId: cityId,
+          cityName: cityName,
+          pincode: pincode);
     } else {
       return User(
-        userId: '',
-        name: '',
-        email: '',
-        phone: '',
-        token: '',
-        aadhar: '',
-        status: '',
-        addedOn: '',
-        //address: '',
-        building: '',
-        area: '',
-        ward: '',
-        city: '',
-        pincode: '',
-        long: '',
-        lat: '',
-      );
+          name: '',
+          email: '',
+          phone: '',
+          token: '',
+          aadhar: '',
+          building: '',
+          areaId: '',
+          areaName: '',
+          ward: '',
+          pincode: '',
+          cityId: '',
+          cityName: '');
     }
   }
 
@@ -169,31 +186,23 @@ class UserPreferences {
     prefs.remove("email");
     prefs.remove("phone");
     prefs.remove("token");
-    prefs.remove("status");
-    prefs.remove("addedOn");
     prefs.remove("aadhar");
-    //prefs.remove("address");
     prefs.remove("building");
-    prefs.remove("area");
+    prefs.remove("areaid");
+    prefs.remove("areaname");
     prefs.remove("ward");
     prefs.remove("pincode");
-    prefs.remove("city");
-    prefs.remove("lat");
-    prefs.remove("long");
+    prefs.remove("cityid");
+    prefs.remove("cityname");
+    prefs.remove(_isLoggedIn);
   }
 
-  Future<bool> saveTempData(
-      name, email, phone, building, area, ward, pincode, city) async {
+  Future<bool> saveTempData(name, building, ward) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
     prefs.setString("tname", name);
-    prefs.setString("temail", email);
-    prefs.setString("tphone", phone);
     prefs.setString("tbuilding", building);
-    prefs.setString("tarea", area);
     prefs.setString("tward", ward);
-    prefs.setString("tpincode", pincode);
-    prefs.setString("tcity", city);
 
     return true;
   }
@@ -202,13 +211,8 @@ class UserPreferences {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     var data = [
       prefs.getString('tname') as String,
-      prefs.getString('temail') as String,
-      prefs.getString('tphone') as String,
       prefs.getString('tbuilding') as String,
-      prefs.getString('tarea') as String,
       prefs.getString('tward') as String,
-      prefs.getString('tpincode') as String,
-      prefs.getString('tcity') as String
     ];
     return data;
   }
@@ -217,12 +221,7 @@ class UserPreferences {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
     prefs.remove("tname");
-    prefs.remove("temail");
-    prefs.remove("tphone");
     prefs.remove("tbuilding");
-    prefs.remove("tarea");
     prefs.remove("tward");
-    prefs.remove("tpincode");
-    prefs.remove("tcity");
   }
 }

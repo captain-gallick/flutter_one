@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app_one/constants/app_urls.dart';
 import 'package:flutter_app_one/data_models/my_bookings.dart';
 import 'package:flutter_app_one/screens/booking_details.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
+import 'package:flutter_app_one/utils/network_connecttion.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:http/http.dart';
 
@@ -24,8 +26,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   bool showHistory = false;
   @override
   void initState() {
-    super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) => getBookingHistory());
+    super.initState();
   }
 
   @override
@@ -43,6 +45,25 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
           },
           child: Scaffold(
             appBar: AppBar(
+              actions: [
+                IconButton(
+                    onPressed: () {
+                      NetworkCheckUp().checkConnection().then((value) {
+                        showHistory = true;
+                        if (value) {
+                          setState(() {
+                            getBookingHistory();
+                          });
+                        } else {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(
+                            content: Text("Please connect to internet."),
+                          ));
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.replay_rounded, color: Colors.black))
+              ],
               title: const Align(
                   alignment: Alignment(-0.25, 0.0),
                   child: Text(
@@ -110,9 +131,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                           .addedOn
                           .substring(history[position].addedOn.indexOf(" ")) +
                       " | " +
-                      ((history[position].status == '1')
-                          ? 'Status: OPEN'
-                          : 'Status: CLOSED')),
+                      (getStatus(history[position].status))),
                   trailing: ClipRRect(
                     child: SizedBox(
                       height: 70.0,
@@ -127,7 +146,18 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
     );
   }
 
+  getStatus(status) {
+    if (status == '1') {
+      return 'OPEN';
+    } else if (status == '2') {
+      return 'PROCESSING';
+    } else {
+      return 'COMPLETE';
+    }
+  }
+
   getImage(int position) {
+    log(AppUrl.imageUrl + history[position].media);
     if (history[position].media != '') {
       return Align(
           alignment: Alignment.centerRight,
@@ -142,36 +172,44 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   }
 
   getBookingHistory() async {
-    showLoader();
-    try {
-      history = [];
-      String token = '';
-      await UserPreferences().getToken().then((value) => token = value);
+    NetworkCheckUp().checkConnection().then((value) async {
+      if (value) {
+        showLoader();
+        try {
+          history = [];
+          String token = '';
+          await UserPreferences().getToken().then((value) => token = value);
 
-      final Response response = await get(
-          Uri.parse(AppUrl.insertbooking + '/1'),
-          headers: <String, String>{'token': token});
+          final Response response = await get(
+              Uri.parse(AppUrl.insertbooking + '/1'),
+              headers: <String, String>{'token': token});
 
-      if (!(jsonDecode(response.body).toString().toLowerCase())
-          .contains('data')) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(jsonDecode(response.body).toString().toUpperCase()),
-        ));
-      } else {
-        print(response.body);
-        List<dynamic> list = jsonDecode(response.body)['data'];
-        for (int i = 0; i < list.length; i++) {
-          history.add(MyBooking.fromJson(list[i]));
+          if (!(jsonDecode(response.body).toString().toLowerCase())
+              .contains('data')) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(jsonDecode(response.body).toString().toUpperCase()),
+            ));
+          } else {
+            log(response.body);
+            List<dynamic> list = jsonDecode(response.body)['data'];
+            for (int i = 0; i < list.length; i++) {
+              history.add(MyBooking.fromJson(list[i]));
+            }
+            setState(() {
+              showHistory = !showHistory;
+              Navigator.pop(dialogContext);
+            });
+          }
+          return history;
+        } catch (e) {
+          //print(e.toString());
         }
-        setState(() {
-          showHistory = !showHistory;
-          Navigator.pop(dialogContext);
-        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Please connect to internet."),
+        ));
       }
-      return history;
-    } catch (e) {
-      //print(e.toString());
-    }
+    });
   }
 
   void showLoader() {

@@ -6,7 +6,6 @@ import 'package:flutter_app_one/screens/book_track_screen.dart';
 import 'package:flutter_app_one/screens/welcome_screen.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 
-import 'home_screen.dart';
 import 'login_screen.dart';
 
 class MySplashScreen extends StatefulWidget {

@@ -7,8 +7,6 @@ import 'package:flutter_app_one/my_widgets/text_button.dart';
 import 'package:flutter_app_one/screens/login_screen.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 
-import 'book_track_screen.dart';
-
 final List<String> imgList = [
   'assets/images/slider1.png',
   'assets/images/slider2.png'

@@ -10,7 +10,9 @@ import 'package:flutter_app_one/constants/app_urls.dart';
 import 'package:flutter_app_one/data_models/department.dart';
 import 'package:flutter_app_one/data_models/my_services.dart';
 import 'package:flutter_app_one/screens/book_service.dart';
+import 'package:flutter_app_one/screens/contact_screen.dart';
 import 'package:flutter_app_one/screens/search_screen.dart';
+import 'package:flutter_app_one/utils/network_connecttion.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:http/http.dart';
 
@@ -104,33 +106,36 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 body: Column(
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    Stack(
                       children: <Widget>[
-                        IconButton(
-                            onPressed: () {
-                              _scaffoldKey.currentState?.openDrawer();
-                              // Navigator.of(context)
-                              //     .push(createRoute(const SlliderScreen()));
-                            },
-                            icon: Image.asset('assets/images/menu.png')),
-                        const SizedBox(
-                          width: 20.0,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Image.asset(
-                            'assets/images/logo.png',
-                            width: 150,
+                        Positioned(
+                          top: 20,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                                onPressed: () {
+                                  _scaffoldKey.currentState?.openDrawer();
+                                  // Navigator.of(context)
+                                  //     .push(createRoute(const SlliderScreen()));
+                                },
+                                icon: Image.asset('assets/images/menu.png')),
                           ),
                         ),
-                        const SizedBox(
-                          width: 20.0,
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              width: 150,
+                            ),
+                          ),
                         ),
-                        IconButton(
+                        /* const SizedBox(
+                          width: 20.0,
+                        ), */
+                        /* IconButton(
                             onPressed: () {},
-                            icon: Image.asset('assets/images/bell.png')),
+                            icon: Image.asset('assets/images/bell.png')), */
                       ],
                     ),
                     const SizedBox(
@@ -279,6 +284,19 @@ class _HomeScreenState extends State<HomeScreen>
                       },
                     )),
             ),
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: ListTile(
+                title:
+                    const Text("Contact Us", style: TextStyle(fontSize: 20.0)),
+                onTap: () {
+                  Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ContactScreen()));
+                },
+              ),
+            ),
           ]),
         )
       ],
@@ -298,25 +316,33 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   getDepartments() async {
-    showLoader();
-    try {
-      departments.clear();
-      final Response response = await get(Uri.parse(AppUrl.departments));
+    NetworkCheckUp().checkConnection().then((value) async {
+      if (value) {
+        showLoader();
+        try {
+          departments.clear();
+          final Response response = await get(Uri.parse(AppUrl.departments));
 
-      if (jsonDecode(response.body).toString().contains('data')) {
-        List<dynamic> list = jsonDecode(response.body)['data'];
-        for (int i = 0; i < list.length; i++) {
-          departments.add(Department.fromJson(list[i]));
-        }
-        setState(() {
-          showDeps = 1;
-        });
-        //getCarousal();
-      } else {}
-      //print('hello:' + departments.length.toString());
-    } catch (e) {}
-    Navigator.pop(dialogContext);
-    getLoginStatus();
+          if (jsonDecode(response.body).toString().contains('data')) {
+            List<dynamic> list = jsonDecode(response.body)['data'];
+            for (int i = 0; i < list.length; i++) {
+              departments.add(Department.fromJson(list[i]));
+            }
+            setState(() {
+              showDeps = 1;
+            });
+            //getCarousal();
+          } else {}
+          //print('hello:' + departments.length.toString());
+        } catch (e) {}
+        Navigator.pop(dialogContext);
+        getLoginStatus();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Please connect to internet."),
+        ));
+      }
+    });
   }
 
   getServicesByDepartment() async {
@@ -378,10 +404,18 @@ class _HomeScreenState extends State<HomeScreen>
           itemBuilder: (context, position) {
             return GestureDetector(
               onTap: () {
-                setState(() {
-                  depId = int.parse(departments[position].id);
-                  showDeps = -1;
-                  getServicesByDepartment();
+                NetworkCheckUp().checkConnection().then((value) {
+                  if (value) {
+                    setState(() {
+                      depId = int.parse(departments[position].id);
+                      showDeps = -1;
+                      getServicesByDepartment();
+                    });
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("Please connect to internet."),
+                    ));
+                  }
                 });
               },
               child: Card(
@@ -567,7 +601,15 @@ class _CarouselWithIndicatorState extends State<CarouselWithIndicatorDemo> {
       globals.gotoBookService = true;
       gotoLogin();
     } else {
-      gotoBookService(item);
+      NetworkCheckUp().checkConnection().then((value) {
+        if (value) {
+          gotoBookService(item);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Please connect to internet."),
+          ));
+        }
+      });
     }
   }
 

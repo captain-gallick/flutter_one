@@ -9,6 +9,7 @@ import 'package:flutter_app_one/my_widgets/app_button.dart';
 import 'package:flutter_app_one/my_widgets/text_field.dart';
 import 'package:flutter_app_one/screens/home_screen.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
+import 'package:flutter_app_one/utils/network_connecttion.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:http/http.dart';
 
@@ -132,7 +133,17 @@ class _SearchScreenState extends State<SearchScreen> {
                           child: AppButton(
                             title: 'Search',
                             onPressed: () {
-                              search();
+                              NetworkCheckUp().checkConnection().then((value) {
+                                if (value) {
+                                  search();
+                                } else {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(const SnackBar(
+                                    content:
+                                        Text("Please connect to internet."),
+                                  ));
+                                }
+                              });
                             },
                           ),
                         )
@@ -174,7 +185,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   getDepartmentList() {
-    log('hello');
     return Expanded(
       child: ListView.builder(
           itemCount: mServiceCount.length,
@@ -251,43 +261,48 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   getServices() async {
-    try {
-      showLoader();
-      mServiceCount.clear();
-      serviceCount.clear();
-      final Response response = await get(Uri.parse(AppUrl.services));
+    NetworkCheckUp().checkConnection().then((value) async {
+      if (value) {
+        try {
+          showLoader();
+          mServiceCount.clear();
+          serviceCount.clear();
+          final Response response = await get(Uri.parse(AppUrl.services));
 
-      if (jsonDecode(response.body).toString().contains('data')) {
-        List<dynamic> list = jsonDecode(response.body)['data'];
-        List<String> names = [];
+          if (jsonDecode(response.body).toString().contains('data')) {
+            List<dynamic> list = jsonDecode(response.body)['data'];
+            List<String> names = [];
 
-        for (int i = 0; i < list.length; i++) {
-          names.add(list[i]['title']);
-        }
+            for (int i = 0; i < list.length; i++) {
+              names.add(list[i]['title']);
+            }
 
-        for (var names in names) {
-          int count = 1;
-          if (!serviceCount.containsKey(names)) {
-            serviceCount[names] = 1;
-            mServiceCount.add(ServiceCount(name: names, count: count));
-          } else {
-            count++;
-            serviceCount[names] += 1;
-            mServiceCount.remove(ServiceCount(name: names));
-            mServiceCount.add(ServiceCount(name: names, count: count));
+            for (var names in names) {
+              int count = 1;
+              if (!serviceCount.containsKey(names)) {
+                serviceCount[names] = 1;
+                mServiceCount.add(ServiceCount(name: names, count: count));
+              } else {
+                count++;
+                serviceCount[names] += 1;
+                mServiceCount.remove(ServiceCount(name: names));
+                mServiceCount.add(ServiceCount(name: names, count: count));
+              }
+            }
+            Navigator.pop(dialogContext);
+            setState(() {
+              showSearch = false;
+            });
           }
+        } catch (e) {
+          log(e.toString());
         }
-        Navigator.pop(dialogContext);
-        setState(() {
-          showSearch = false;
-        });
-        for (int i = 0; i < list.length; i++) {
-          log(mServiceCount[i].name + "--" + mServiceCount[i].count.toString());
-        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Please connect to internet."),
+        ));
       }
-    } catch (e) {
-      log(e.toString());
-    }
+    });
   }
 
   late BuildContext dialogContext;

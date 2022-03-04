@@ -7,6 +7,7 @@ class MyBooking {
   String address;
   String service;
   String department;
+  String departmentId;
   String status;
   String sdescr;
   String addedOn;
@@ -30,6 +31,7 @@ class MyBooking {
       required this.phone,
       required this.service,
       required this.department,
+      required this.departmentId,
       required this.sdescr,
       required this.media,
       required this.meadia1,
@@ -55,22 +57,21 @@ class MyBooking {
         addedOn: responseData['added_on'],
         address: responseData['address'],
         status: responseData['status'],
-        department: responseData['department'],
+        department: responseData['department_name'] ?? '',
+        departmentId: responseData['department'],
         userId: responseData['user_id'],
         meadia1: responseData['media1'],
         media: responseData['media'],
         sdescr: responseData['sdescr'],
         service: responseData['service'],
-        vendor: responseData['vendor'],
-        area: responseData['vendor'],
-        building: responseData['vendor'],
-        lat: responseData['vendor'],
-        lng: responseData['vendor'],
-        pincode: responseData['vendor'],
-        ward: responseData['vendor'],
+        vendor: responseData['vendor'] ?? "",
+        area: responseData['area'],
+        building: responseData['building'],
+        lat: responseData['lat'],
+        lng: responseData['lng'],
+        pincode: responseData['pincode'],
+        ward: responseData['ward'],
         city: responseData['city'],
-        serviceName: (responseData.containsKey('service_name')
-            ? responseData['service_name']
-            : 'Service Name'));
+        serviceName: responseData['service_name'] ?? "");
   }
 }

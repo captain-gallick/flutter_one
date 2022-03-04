@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:flutter_app_one/my_widgets/text_field.dart';
 import 'package:flutter_app_one/screens/book_track_screen.dart';
 import 'package:flutter_app_one/screens/profile_screen.dart';
 import 'package:flutter_app_one/screens/registration_screen.dart';
+import 'package:flutter_app_one/utils/network_connecttion.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:http/http.dart';
 import 'package:flutter_app_one/utils/globals.dart' as globals;
@@ -37,7 +39,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-
     //_otpInteractor = OTPInteractor();
     /* _otpInteractor.startListenUserConsent('VM-MOURJA');
     /* .getAppSignature()
@@ -127,7 +128,15 @@ class _LoginScreenState extends State<LoginScreen> {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             onPressed: () async {
-              sendOTP();
+              NetworkCheckUp().checkConnection().then((value) {
+                if (value) {
+                  sendOTP();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Please connect to internet."),
+                  ));
+                }
+              });
             },
             icon: Image.asset('assets/images/continue_button.png'),
             iconSize: 150.0,
@@ -186,7 +195,17 @@ class _LoginScreenState extends State<LoginScreen> {
           child: IconButton(
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
-            onPressed: doLogin,
+            onPressed: () {
+              NetworkCheckUp().checkConnection().then((value) {
+                if (value) {
+                  doLogin();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Please connect to internet."),
+                  ));
+                }
+              });
+            },
             icon: Image.asset('assets/images/next_button.png'),
             iconSize: 150.0,
           ),
@@ -331,71 +350,82 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> sendOTP() async {
-    _phone = phoneController.text;
-    //_password = passwordController.text;
+    try {
+      _phone = phoneController.text;
+      //_password = passwordController.text;
 
-    if (_phone.length == 10) {
-      showLoader();
-      final Response response = await post(
-        Uri.parse(AppUrl.sendOtp),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{'phone': _phone}),
-      );
+      if (_phone.length == 10) {
+        showLoader();
+        final Response response = await post(
+          Uri.parse(AppUrl.sendOtp),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{'phone': _phone}),
+        );
 
-      if (!(jsonDecode(response.body).toString().toLowerCase())
-          .contains('success')) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(jsonDecode(response.body).toString().toUpperCase()),
-        ));
-        Navigator.pop(dialogContext);
-      } else {
-        setState(() {
-          showOTP = !showOTP;
+        log(response.body);
+        if (!(jsonDecode(response.body).toString().toLowerCase())
+            .contains('success')) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(jsonDecode(response.body).toString().toUpperCase()),
+          ));
           Navigator.pop(dialogContext);
-        });
+        } else {
+          setState(() {
+            showOTP = !showOTP;
+            Navigator.pop(dialogContext);
+          });
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Please enter a valid Phone Number."),
+        ));
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Please enter a valid Phone Number."),
-      ));
+    } catch (e) {
+      Navigator.pop(dialogContext);
+      log(e.toString());
     }
   }
 
   Future<void> doLogin() async {
-    _otp = otpController.text;
+    try {
+      _otp = otpController.text;
 
-    if (_otp.length == 6) {
-      showLoader();
-      final Response response = await post(
-        Uri.parse(AppUrl.verifyOtp),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{'phone': _phone, 'otp': _otp}),
-      );
+      if (_otp.length == 6) {
+        showLoader();
+        final Response response = await post(
+          Uri.parse(AppUrl.verifyOtp),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{'phone': _phone, 'otp': _otp}),
+        );
 
-      if (!(jsonDecode(response.body).toString().toLowerCase())
-          .contains('success')) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              jsonDecode(response.body)['message'].toString().toUpperCase()),
-        ));
-        Navigator.pop(dialogContext);
+        log(response.body);
+        if (!(jsonDecode(response.body).toString().toLowerCase())
+            .contains('success')) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                jsonDecode(response.body)['message'].toString().toUpperCase()),
+          ));
+          Navigator.pop(dialogContext);
+        } else {
+          User user = User.fromJson(jsonDecode(response.body)['data']);
+
+          UserPreferences userPreferences = UserPreferences();
+
+          await userPreferences.saveUser(user);
+
+          checkPath();
+        }
       } else {
-        User user = User.fromJson(jsonDecode(response.body)['data']);
-
-        UserPreferences userPreferences = UserPreferences();
-
-        await userPreferences.saveUser(user);
-
-        checkPath();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Please enter a valid Phone Number."),
+        ));
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Please enter a valid Phone Number."),
-      ));
+    } catch (e) {
+      log(e.toString());
     }
   }
 
