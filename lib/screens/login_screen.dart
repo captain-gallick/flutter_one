@@ -1,20 +1,24 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_app_one/constants/app_urls.dart';
 import 'package:flutter_app_one/data_models/user.dart';
+import 'package:flutter_app_one/my_widgets/app_button.dart';
 import 'package:flutter_app_one/my_widgets/text_field.dart';
 import 'package:flutter_app_one/screens/book_track_screen.dart';
 import 'package:flutter_app_one/screens/profile_screen.dart';
 import 'package:flutter_app_one/screens/registration_screen.dart';
+import 'package:flutter_app_one/utils/app_colors.dart';
 import 'package:flutter_app_one/utils/network_connecttion.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart';
 import 'package:flutter_app_one/utils/globals.dart' as globals;
+import 'package:location/location.dart';
+import 'package:sms_autofill/sms_autofill.dart';
 
 import 'book_service.dart';
 import 'booking_history.dart';
@@ -28,40 +32,30 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  Timer? timer;
+  LatLng latLng = const LatLng(0, 0);
+
   late String _phone, _otp;
   final phoneController = TextEditingController();
   final TextEditingController otpController = TextEditingController();
   bool showOTP = false;
-  //final scaffoldKey = GlobalKey();
-  //late OTPTextEditController otpController;
-  //final OTPInteractor _otpInteractor = OTPInteractor();
+  String appSignature = 'qsyJENrq9bU';
 
   @override
   void initState() {
     super.initState();
-    //_otpInteractor = OTPInteractor();
-    /* _otpInteractor.startListenUserConsent('VM-MOURJA');
-    /* .getAppSignature()
-        //ignore: avoid_print
-        .then((value) => print('signature - $value')); */
-
-    otpController = OTPTextEditController(
-      codeLength: 6,
-      //ignore: avoid_print
-      onCodeReceive: (code) => print('Your Application receive code - $code'),
-      otpInteractor: _otpInteractor,
-    )..startListenUserConsent(
-        (code) {
-          final exp = RegExp(r'(\d{6})');
-          return exp.stringMatch(code ?? '') ?? '';
-        },
-      ); */
+    SmsAutoFill().getAppSignature.then((value) {
+      appSignature = value;
+    });
+    WidgetsBinding.instance?.addPostFrameCallback((_) => getCurrentLocation());
   }
 
   @override
-  Future<void> dispose() async {
-    //await _otpInteractor.stopListenForCode();
-    //await otpController.stopListen();
+  void dispose() {
+    if (timer != null) {
+      timer!.cancel();
+    }
+    SmsAutoFill().unregisterListener();
     otpController.dispose();
     phoneController.dispose();
     super.dispose();
@@ -82,17 +76,22 @@ class _LoginScreenState extends State<LoginScreen> {
         return false;
       },
       child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-              color: Colors.white,
-              image: DecorationImage(
-                image: AssetImage('assets/images/login_bg.png'),
-                fit: BoxFit.cover,
-              )),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: (showOTP ? getOTPLayout() : getphoneNumberLayout()),
-          ),
+        body: Stack(
+          children: [
+            Container(
+              color: AppColors.backgroundcolor,
+            ),
+            SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Column(children: [
+                Image.asset('assets/images/login_bg_i.png'),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: (showOTP ? getOTPLayout() : getphoneNumberLayout()),
+                )
+              ]),
+            ),
+          ],
         ),
       ),
     ));
@@ -103,6 +102,9 @@ class _LoginScreenState extends State<LoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
+        const SizedBox(
+          height: 30,
+        ),
         Center(
           child: Image.asset(
             'assets/images/logo.png',
@@ -114,22 +116,26 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: EdgeInsets.fromLTRB(20.0, 0.0, 0.0, 20.0),
           child: Align(
               alignment: Alignment.centerLeft,
-              child: Text('Enter Your Phone Number')),
+              child: Text('Enter Your Phone Number',
+                  style: TextStyle(
+                      color: AppColors.lightTextColor, fontSize: 18))),
         ),
         MyTextField(
           myController: phoneController,
           type: TextInputType.phone,
-          alignment: TextAlign.center,
           length: 10,
+          prefix: '    +91  ',
           hint: 'Phone Number',
         ),
-        Center(
-          child: IconButton(
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 100),
+          child: AppButton(
+            width: 150,
+            title: 'LET\'S START',
             onPressed: () async {
               NetworkCheckUp().checkConnection().then((value) {
                 if (value) {
+                  SmsAutoFill().listenForCode;
                   sendOTP();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -138,16 +144,40 @@ class _LoginScreenState extends State<LoginScreen> {
                 }
               });
             },
+          ),
+        ),
+        /* Center(
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            
             icon: Image.asset('assets/images/continue_button.png'),
             iconSize: 150.0,
           ),
+        ), */
+        GestureDetector(
+          onTap: gotoHome,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Text(
+                'SKIP',
+                style:
+                    TextStyle(fontSize: 18, color: AppColors.buttonGradientTop),
+              ),
+              Icon(
+                Icons.double_arrow,
+                color: AppColors.appGreen,
+              ),
+            ],
+          ),
         ),
-        Center(
+        /* Center(
           child: TextButton(
             onPressed: gotoHome,
             child: const Text('SKIP'),
           ),
-        ),
+        ), */
       ],
     );
   }
@@ -158,6 +188,9 @@ class _LoginScreenState extends State<LoginScreen> {
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
+        const SizedBox(
+          height: 30,
+        ),
         Center(
           child: Image.asset(
             'assets/images/logo.png',
@@ -169,11 +202,14 @@ class _LoginScreenState extends State<LoginScreen> {
             alignment: Alignment.centerLeft,
             child: Text(
               'Enter the OTP',
-              style: TextStyle(fontSize: 17),
+              style: TextStyle(fontSize: 18, color: AppColors.lightTextColor),
             )),
         Row(
           children: <Widget>[
-            Text('sent to ${phoneController.text}'),
+            Text(
+              'sent to ${phoneController.text}',
+              style: const TextStyle(color: AppColors.lightTextColor),
+            ),
             TextButton(
                 onPressed: () {
                   showAlertDialog();
@@ -184,34 +220,87 @@ class _LoginScreenState extends State<LoginScreen> {
                 ))
           ],
         ),
-        MyTextField(
-          myController: otpController,
-          type: TextInputType.number,
-          length: 6,
-          hint: 'OTP',
-          alignment: TextAlign.center,
+        PinFieldAutoFill(
+          decoration: const UnderlineDecoration(
+              textStyle: TextStyle(color: AppColors.lightTextColor),
+              colorBuilder: FixedColorBuilder(AppColors.appGreen)),
+          controller: otpController,
+          codeLength: 6,
+          onCodeSubmitted: (code) {
+            _otp = code;
+            doLogin();
+          },
+          onCodeChanged: (code) {
+            if (code!.length == 6) {
+              _otp = code;
+              doLogin();
+            }
+          },
         ),
-        Center(
+        const SizedBox(
+          height: 20,
+        ),
+        StatefulBuilder(builder: (BuildContext context, StateSetter setter) {
+          timer = Timer(const Duration(seconds: 1), () {
+            getTimeText(setter);
+          });
+          return Text(timeText);
+        }),
+        const SizedBox(
+          height: 10,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 100),
+          child: TextButton(
+              style: TextButton.styleFrom(
+                  backgroundColor: AppColors.buttonGradientBottom,
+                  minimumSize: const Size(150, 40)),
+              child: const Icon(
+                Icons.arrow_right_alt,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                NetworkCheckUp().checkConnection().then((value) {
+                  if (value) {
+                    doLogin();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("Please connect to internet."),
+                    ));
+                  }
+                });
+              }),
+        ),
+        /* Center(
           child: IconButton(
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
-            onPressed: () {
-              NetworkCheckUp().checkConnection().then((value) {
-                if (value) {
-                  doLogin();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Please connect to internet."),
-                  ));
-                }
-              });
-            },
+            ,
             icon: Image.asset('assets/images/next_button.png'),
             iconSize: 150.0,
           ),
-        ),
+        ), */
       ],
     );
+  }
+
+  int startTime = 120;
+  String timeText = 'Resend OTP in 2 : 00';
+
+  getTimeText(setter) async {
+    if (startTime != 0) {
+      setter(() {
+        startTime = (startTime - 1).round();
+        if (startTime >= 60) {
+          timeText = 'Resend OTP in 1 : ' + (startTime - 60).toString();
+        } else {
+          timeText = 'Resend OTP in 0 : ' + startTime.toString();
+        }
+      });
+    } else {
+      await SmsAutoFill().unregisterListener();
+      sendOTP();
+    }
   }
 
   void showLoader() {
@@ -247,8 +336,10 @@ class _LoginScreenState extends State<LoginScreen> {
     Widget yesButton = TextButton(
       child: const Text("YES"),
       onPressed: () {
+        timer!.cancel();
+        showOTP = !showOTP;
         setState(() {
-          showOTP = !showOTP;
+          //await _controller.pause();
           Navigator.pop(exitDialogContext);
         });
       },
@@ -309,6 +400,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: const Text('YES'),
                               onTap: () {
                                 setState(() {
+                                  timer!.cancel();
                                   showOTP = !showOTP;
                                   Navigator.pop(exitDialogContext);
                                 });
@@ -361,7 +453,8 @@ class _LoginScreenState extends State<LoginScreen> {
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
-          body: jsonEncode(<String, String>{'phone': _phone}),
+          body: jsonEncode(
+              <String, String>{'phone': _phone, 'signature': appSignature}),
         );
 
         log(response.body);
@@ -373,7 +466,10 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pop(dialogContext);
         } else {
           setState(() {
-            showOTP = !showOTP;
+            startTime = 120;
+            SmsAutoFill().listenForCode;
+            showOTP = true;
+
             Navigator.pop(dialogContext);
           });
         }
@@ -391,6 +487,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> doLogin() async {
     try {
       _otp = otpController.text;
+      log('_otp: ' + _otp);
 
       if (_otp.length == 6) {
         showLoader();
@@ -411,6 +508,9 @@ class _LoginScreenState extends State<LoginScreen> {
           ));
           Navigator.pop(dialogContext);
         } else {
+          dispose();
+          timer!.cancel();
+
           User user = User.fromJson(jsonDecode(response.body)['data']);
 
           UserPreferences userPreferences = UserPreferences();
@@ -421,7 +521,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Please enter a valid Phone Number."),
+          content: Text("Please enter a valid details."),
         ));
       }
     } catch (e) {
@@ -434,25 +534,38 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (context) => const BookingHistoryScreen()));
+              builder: (context) => const BookingHistoryScreen(login: true)));
     } else if (globals.gotoProfile) {
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => const ProfileScreen()));
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const ProfileScreen(login: true)));
     } else if (globals.gotoBookService) {
       var item = globals.item;
       if (item != null) {
-        Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
+        /* Navigator.pushReplacement(
+            context, */
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+              builder: (BuildContext context) => BookServiceScreen(
+                  depId: depId,
+                  serviceName: item.title,
+                  vibhag: item.vibhag,
+                  serviceId: item.id,
+                  login: true)),
+          (route) => false,
+        );
+        /* MaterialPageRoute(
                 builder: (context) => BookServiceScreen(
                       depId: depId,
                       serviceName: item.title,
                       vibhag: item.vibhag,
                       serviceId: item.id,
-                    )));
+                    ))); */
       }
     } else {
-      gotoBookTrack();
+      gotoHome();
     }
     clearGlobals();
   }
@@ -463,5 +576,36 @@ class _LoginScreenState extends State<LoginScreen> {
     globals.gotoBookService = false;
     globals.gotoBookingHistory = false;
     globals.gotoProfile = false;
+  }
+
+  getCurrentLocation() async {
+    Location location = Location();
+
+    bool _serviceEnabled;
+    PermissionStatus _permissionGranted;
+    LocationData _locationData;
+
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    _locationData = await location.getLocation();
+    double? lat = _locationData.latitude;
+    double? lng = _locationData.longitude;
+    latLng = LatLng(lat ?? 0, lng ?? 0);
+
+    await UserPreferences().setLocation(lat.toString(), lng.toString());
   }
 }

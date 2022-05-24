@@ -32,12 +32,12 @@ class User {
         email: responseData['email'] ?? '',
         phone: responseData['phone'],
         aadhar: responseData['aadhar'] ?? '',
-        token: responseData['token'],
+        token: responseData['token'] ?? '',
         building: responseData['building'] ?? '',
         areaId: responseData['areaid'] ?? '',
         areaName: responseData['area'] ?? '',
         ward: responseData['ward'] ?? '',
-        pincode: responseData['pincode'] ?? '',
+        pincode: responseData['pin'] ?? '',
         cityId: responseData['cityid'] ?? '',
         cityName: responseData['city'] ?? '');
   }

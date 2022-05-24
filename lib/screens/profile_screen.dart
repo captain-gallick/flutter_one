@@ -12,10 +12,12 @@ import 'package:flutter_app_one/utils/network_connecttion.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:http/http.dart';
 
+import '../data_models/user.dart';
 import 'home_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  final bool? login;
+  const ProfileScreen({Key? key, this.login}) : super(key: key);
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -52,7 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => getUserDetails());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => getUserInfo());
   }
 
   @override
@@ -73,12 +75,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return SafeArea(
         child: WillPopScope(
             onWillPop: () async {
-              Navigator.pushAndRemoveUntil(
+              if (widget.login != null && widget.login == true) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                      builder: (BuildContext context) => const HomeScreen()),
+                  (route) => false,
+                );
+              } else {
+                Navigator.pop(context);
+              }
+              /* Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
                     builder: (BuildContext context) => const HomeScreen()),
                 (route) => false,
-              );
+              ); */
               return false;
             },
             child: Scaffold(
@@ -87,9 +99,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       alignment: Alignment(-0.25, 0.0),
                       child: Text(
                         "Profile",
-                        style: TextStyle(color: AppColors.appGrey),
+                        style: TextStyle(color: AppColors.appTextDarkBlue),
                       )),
-                  backgroundColor: Colors.white,
+                  backgroundColor: AppColors.backgroundcolor,
                   elevation: 0,
                   leading: IconButton(
                       icon: const Icon(
@@ -97,13 +109,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: AppColors.appGrey,
                       ),
                       onPressed: () {
-                        Navigator.pushAndRemoveUntil(
+                        if (widget.login != null && widget.login == true) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (BuildContext context) =>
+                                    const HomeScreen()),
+                            (route) => false,
+                          );
+                        } else {
+                          Navigator.pop(context);
+                        }
+                        /* Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(
                               builder: (BuildContext context) =>
                                   const HomeScreen()),
                           (route) => false,
-                        );
+                        ); */
                       }),
                 ),
                 body: Container(
@@ -114,7 +137,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ))))));
   }
 
-  getUserDetails() {
+  getUserInfo() async {
+    try {
+      showLoader('Please wait...');
+      String token = '';
+      await UserPreferences().getToken().then((value) => {token = value});
+
+      final Response response = await get(
+        Uri.parse(AppUrl.updateUser),
+        headers: <String, String>{'token': token},
+      );
+      if (response.statusCode == 200) {
+        User user = User.fromJson(jsonDecode(response.body)['data']);
+
+        setState(() {
+          nameController.text = user.name;
+          emailController.text = user.email;
+          buildingController.text = user.building;
+
+          areaId = user.areaId;
+          areaText = user.areaId != '0' ? user.areaName : areaText;
+
+          wardController.text = user.ward;
+
+          cityId = user.cityId;
+          cityText = user.cityId != '0' ? user.cityName : cityText;
+
+          pincodeText = user.pincode != '0' ? user.pincode : pincodeText;
+
+          aadharController.text = user.aadhar;
+          Navigator.pop(dialogContext);
+        });
+      }
+      log(response.body);
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
+  /* getUserDetails() {
     setState(() {
       UserPreferences().getUser().then((value) {
         name = name == '-' ? value.name : name;
@@ -141,100 +202,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
         aadharController.text = aadhar;
       });
     });
-  }
+  } */
 
   registrationForm() {
     return Container(
         padding: const EdgeInsets.all(10.0),
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.backgroundcolor,
         ),
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              heading('Full Name'),
-              MyTextField(
-                type: TextInputType.name,
-                hint: "Enter your Name",
-                key: null,
-                myController: nameController,
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: <
+                Widget>[
+          heading('Full Name'),
+          MyTextField(
+            type: TextInputType.name,
+            hint: "Enter your Name",
+            key: null,
+            myController: nameController,
+          ),
+          heading('Email'),
+          MyTextField(
+            type: TextInputType.emailAddress,
+            hint: "Enter your email",
+            key: null,
+            myController: emailController,
+          ),
+          heading('City'),
+          GestureDetector(
+            onTap: () {
+              getCities();
+            },
+            child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(width: 1, color: AppColors.appGreen),
+                  borderRadius: BorderRadius.circular(32),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(cityText,
+                      style: const TextStyle(color: AppColors.lightTextColor)),
+                )),
+          ),
+          heading('Area'),
+          GestureDetector(
+            onTap: () {
+              if (cityText != "Select City") {
+                getAreas(cityId);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Please Select city"),
+                ));
+              }
+            },
+            child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(width: 1, color: AppColors.appGreen),
+                  borderRadius: BorderRadius.circular(32),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(areaText,
+                      style: const TextStyle(color: AppColors.lightTextColor)),
+                )),
+          ),
+          heading('Pincode'),
+          Container(
+              decoration: BoxDecoration(
+                border: Border.all(width: 1, color: AppColors.appGreen),
+                borderRadius: BorderRadius.circular(32),
               ),
-              heading('Email'),
-              MyTextField(
-                type: TextInputType.emailAddress,
-                hint: "Enter your email",
-                key: null,
-                myController: emailController,
-              ),
-              heading('City'),
-              GestureDetector(
-                onTap: () {
-                  getCities();
-                },
-                child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xffF4F7FE),
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Text(cityText),
-                    )),
-              ),
-              heading('Area'),
-              GestureDetector(
-                onTap: () {
-                  if (cityText != "Select City") {
-                    getAreas(cityId);
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Please Select city"),
-                    ));
-                  }
-                },
-                child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xffF4F7FE),
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Text(areaText),
-                    )),
-              ),
-              heading('Pincode'),
-              Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xffF4F7FE),
-                    borderRadius: BorderRadius.circular(32),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Text(pincodeText),
-                  )),
-              heading('Building'),
-              MyTextField(
-                type: TextInputType.streetAddress,
-                hint: "Enter your Building",
-                key: null,
-                myController: buildingController,
-              ),
-              heading('Ward'),
-              MyTextField(
-                type: TextInputType.streetAddress,
-                hint: "Enter your Ward",
-                key: null,
-                myController: wardController,
-              ),
-              heading('Aadhar Number'),
-              MyTextField(
-                length: 12,
-                type: TextInputType.number,
-                hint: "Enter your Aadhar Number",
-                key: null,
-                myController: aadharController,
-              )
-              /* heading('Phone'),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Text(pincodeText,
+                    style: const TextStyle(color: AppColors.lightTextColor)),
+              )),
+          heading('Building'),
+          MyTextField(
+            type: TextInputType.streetAddress,
+            hint: "Enter your Building",
+            key: null,
+            myController: buildingController,
+          ),
+          heading('Ward'),
+          MyTextField(
+            type: TextInputType.streetAddress,
+            hint: "Enter your Ward",
+            key: null,
+            myController: wardController,
+          ),
+          heading('Aadhar Number'),
+          MyTextField(
+            length: 12,
+            type: TextInputType.number,
+            hint: "Enter your Aadhar Number",
+            key: null,
+            myController: aadharController,
+          )
+          /* heading('Phone'),
               MyTextField(
                 length: 10,
                 type: TextInputType.phone,
@@ -242,7 +306,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 key: null,
                 myController: phoneController,
               ), */
-              /* heading('Address'),
+          /* heading('Address'),
               MyTextField(
                 type: TextInputType.streetAddress,
                 hint: "Enter your Address",
@@ -258,25 +322,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 myController: aadharController,
               ),*/
 
-              ,
-              const SizedBox(
-                height: 40.0,
-              ),
-              AppButton(
-                  title: 'Update',
-                  onPressed: () {
-                    NetworkCheckUp().checkConnection().then((value) {
-                      if (value) {
-                        updateProfile();
-                      } else {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(
-                          content: Text("Please connect to internet."),
-                        ));
-                      }
-                    });
-                  })
-            ]));
+          ,
+          const SizedBox(
+            height: 40.0,
+          ),
+          AppButton(
+              title: 'Update',
+              onPressed: () {
+                NetworkCheckUp().checkConnection().then((value) {
+                  if (value) {
+                    updateProfile();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("Please connect to internet."),
+                    ));
+                  }
+                });
+              })
+        ]));
   }
 
   void showWaitLoader() {
@@ -385,45 +448,106 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  updateList() {
+    setState(() {});
+  }
+
   void _listDialog(int i) {
+    List list = [];
+    if (i == 1) {
+      list = cities;
+    } else {
+      list = areas;
+    }
     showDialog(
         barrierDismissible: false,
         context: buildContext,
         builder: (BuildContext context) {
           listDialogContext = context;
-          return Dialog(
-              backgroundColor: Colors.white,
-              child: Container(
-                constraints: const BoxConstraints(
-                    minHeight: 0, minWidth: double.infinity, maxHeight: 300),
-                //height: 300.0,
-                child: ListView.builder(
-                    shrinkWrap: true,
-                    scrollDirection: Axis.vertical,
-                    itemCount: (i == 1) ? cities.length : areas.length,
-                    itemBuilder: (context, position) {
-                      return GestureDetector(
-                        child: ListTile(
-                          title: Text((i == 1)
-                              ? cities[position].name
-                              : areas[position].name),
+          return StatefulBuilder(builder: (context, setState) {
+            return Dialog(
+                backgroundColor: Colors.white,
+                child: Container(
+                  constraints: const BoxConstraints(
+                      minHeight: 0, minWidth: double.infinity, maxHeight: 300),
+                  //height: 300.0,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextField(
+                          onChanged: (value) {
+                            setState(() {
+                              list = [];
+                              if (i == 1) {
+                                for (int i = 0; i < cities.length; i++) {
+                                  if (cities[i]
+                                      .name
+                                      .toLowerCase()
+                                      .contains(value.toLowerCase())) {
+                                    list.add(cities[i]);
+                                  }
+                                }
+                              } else {
+                                for (int i = 0; i < areas.length; i++) {
+                                  if (areas[i]
+                                      .name
+                                      .toLowerCase()
+                                      .contains(value.toLowerCase())) {
+                                    list.add(areas[i]);
+                                  }
+                                }
+                              }
+                            });
+                          },
+                          decoration: const InputDecoration(hintText: 'Search'),
                         ),
-                        onTap: () {
-                          Navigator.pop(listDialogContext);
-                          setState(() {
-                            if (i == 1) {
-                              cityText = cities[position].name;
-                              cityId = cities[position].id;
-                            } else if (i == 2) {
-                              areaText = areas[position].name;
-                              areaId = areas[position].id;
-                              pincodeText = areas[position].pincode;
-                            }
-                          });
-                        },
-                      );
-                    }),
-              ));
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                            shrinkWrap: true,
+                            scrollDirection: Axis.vertical,
+                            // itemCount: (i == 1) ? cities.length : areas.length,
+                            itemCount: list.length,
+                            itemBuilder: (context, position) {
+                              return GestureDetector(
+                                child: ListTile(
+                                  title: Text(list[position].name),
+                                  /* title: Text((i == 1)
+                                      ? cities[position].name
+                                      : areas[position].name), */
+                                ),
+                                onTap: () {
+                                  Navigator.pop(listDialogContext);
+                                  if (i == 1) {
+                                    cityText = list[position].name;
+                                    cityId = list[position].id;
+                                  } else {
+                                    areaText = list[position].name;
+                                    areaId = list[position].id;
+                                    pincodeText = list[position].pincode;
+                                    log(pincodeText);
+                                  }
+
+                                  updateList();
+                                  /* setState(() {
+                                    if (i == 1) {
+                                      cityText = cities[position].name;
+                                      cityId = cities[position].id;
+                                    } else if (i == 2) {
+                                      areaText = areas[position].name;
+                                      areaId = areas[position].id;
+                                      pincodeText = areas[position].pincode;
+                                    }
+                                  }); */
+                                },
+                              );
+                            }),
+                      ),
+                    ],
+                  ),
+                ));
+          });
         });
   }
 
@@ -433,8 +557,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Text(
         title,
         style: const TextStyle(
-          color: AppColors.appGrey,
-        ),
+            color: AppColors.appTextLightBlue, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -474,7 +597,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       String email = emailController.text;
       //String phone = phoneController.text;
       //String address = addressController.text;
-      //String aadhar = aadharController.text;
+      String aadhar = aadharController.text;
       String building = buildingController.text;
       //String area = areaController.text;
       String ward = wardController.text;

@@ -22,4 +22,5 @@ class AppUrl {
   static const String search = 'https://maljal.org/api/services/search/';
   static const String getLatestLocation =
       'https://maljal.org/api/booking/livetrack/';
+  static const String jalprahari = 'https://maljal.org/api/jalprahri';
 }

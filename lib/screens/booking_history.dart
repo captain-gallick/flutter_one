@@ -9,11 +9,13 @@ import 'package:flutter_app_one/utils/app_colors.dart';
 import 'package:flutter_app_one/utils/network_connecttion.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:http/http.dart';
+import 'package:skeletons/skeletons.dart';
 
 import 'home_screen.dart';
 
 class BookingHistoryScreen extends StatefulWidget {
-  const BookingHistoryScreen({Key? key}) : super(key: key);
+  final bool? login;
+  const BookingHistoryScreen({Key? key, this.login}) : super(key: key);
 
   @override
   _BookingHistoryScreenState createState() => _BookingHistoryScreenState();
@@ -35,12 +37,22 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
     return SafeArea(
       child: WillPopScope(
           onWillPop: () async {
-            Navigator.pushAndRemoveUntil(
+            if (widget.login != null && widget.login == true) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: (BuildContext context) => const HomeScreen()),
+                (route) => false,
+              );
+            } else {
+              Navigator.pop(context);
+            }
+            /* Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
                   builder: (BuildContext context) => const HomeScreen()),
               (route) => false,
-            );
+            ); */
             return false;
           },
           child: Scaffold(
@@ -62,34 +74,46 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                         }
                       });
                     },
-                    icon: const Icon(Icons.replay_rounded, color: Colors.black))
+                    icon: const Icon(Icons.replay_rounded,
+                        color: AppColors.appTextDarkBlue))
               ],
               title: const Align(
                   alignment: Alignment(-0.25, 0.0),
                   child: Text(
                     "Booking History",
-                    style: TextStyle(color: AppColors.appGrey),
+                    style: TextStyle(color: AppColors.appTextDarkBlue),
                   )),
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.backgroundcolor,
               elevation: 0.0,
               leading: IconButton(
                   icon: const Icon(
                     Icons.chevron_left_rounded,
-                    color: AppColors.appGrey,
+                    color: AppColors.appTextDarkBlue,
                   ),
                   onPressed: () {
-                    Navigator.pushAndRemoveUntil(
+                    if (widget.login != null && widget.login == true) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                                const HomeScreen()),
+                        (route) => false,
+                      );
+                    } else {
+                      Navigator.pop(context);
+                    }
+                    /* Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
                           builder: (BuildContext context) =>
                               const HomeScreen()),
                       (route) => false,
-                    );
+                    ); */
                   }),
             ),
             body: Column(
               children: <Widget>[
-                Expanded(child: (showHistory) ? getList() : Container())
+                Expanded(child: (showHistory) ? getList() : getSkeleton())
               ],
             ),
           )),
@@ -104,51 +128,92 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
       itemBuilder: (context, position) {
         return GestureDetector(
             onTap: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                    builder: (BuildContext context) => BookingDetailsScreen(
-                          history: history[position],
-                        )),
-                (route) => false,
-              );
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (BuildContext context) => BookingDetailsScreen(
+                            history: history[position],
+                          )));
             },
-            child: Column(
-              children: [
-                Container(
-                  height: 5.0,
-                  color: Colors.grey.shade200,
-                ),
-                ListTile(
-                  title: Text(
-                    history[position].serviceName,
-                    style: const TextStyle(fontSize: 22.0),
+            child: Container(
+              color: AppColors.appLightBlue,
+              child: Column(
+                children: [
+                  Container(
+                    height: 5.0,
+                    color: Colors.grey.shade200,
                   ),
-                  subtitle: Text(history[position].addedOn.substring(
-                          0, history[position].addedOn.indexOf(" ")) +
-                      " | " +
-                      history[position]
-                          .addedOn
-                          .substring(history[position].addedOn.indexOf(" ")) +
-                      " | " +
-                      (getStatus(history[position].status))),
-                  trailing: ClipRRect(
-                    child: SizedBox(
-                      height: 70.0,
-                      width: 70.0,
-                      child: getImage(position),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ListTile(
+                      title: Text(
+                        history[position].serviceName,
+                        style: const TextStyle(
+                            fontSize: 18.0, color: AppColors.appTextDarkBlue),
+                      ),
+                      subtitle: Text(
+                        history[position].addedOn.substring(
+                                0, history[position].addedOn.indexOf(" ")) +
+                            " | " +
+                            history[position].addedOn.substring(
+                                history[position].addedOn.indexOf(" ")) +
+                            " | " +
+                            (getStatus(history[position].status)),
+                        style: const TextStyle(color: AppColors.lightTextColor),
+                      ),
+                      trailing: ClipRRect(
+                        child: SizedBox(
+                          height: 70.0,
+                          width: 70.0,
+                          child: getImage(position),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ));
+      },
+    );
+  }
+
+  getSkeleton() {
+    return ListView.builder(
+      scrollDirection: Axis.vertical,
+      shrinkWrap: true,
+      itemCount: 4,
+      itemBuilder: (context, position) {
+        return Column(
+          children: [
+            Container(
+              height: 5.0,
+              color: Colors.grey.shade200,
+            ),
+            ListTile(
+              title: SkeletonLine(
+                style: SkeletonLineStyle(
+                    height: 16,
+                    width: 100,
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              subtitle: SkeletonLine(
+                style: SkeletonLineStyle(
+                    height: 16,
+                    width: 70,
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              trailing: const SkeletonAvatar(
+                  style: SkeletonAvatarStyle(width: 20, height: 20)),
+            ),
+          ],
+        );
       },
     );
   }
 
   getStatus(status) {
     if (status == '1') {
-      return 'OPEN';
+      return 'ASSIGN TO VENDOR';
     } else if (status == '2') {
       return 'PROCESSING';
     } else {
@@ -174,7 +239,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   getBookingHistory() async {
     NetworkCheckUp().checkConnection().then((value) async {
       if (value) {
-        showLoader();
+        //showLoader();
         try {
           history = [];
           String token = '';
@@ -197,7 +262,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
             }
             setState(() {
               showHistory = !showHistory;
-              Navigator.pop(dialogContext);
+              //Navigator.pop(dialogContext);
             });
           }
           return history;

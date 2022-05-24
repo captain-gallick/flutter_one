@@ -1,7 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_one/my_widgets/text_button.dart';
 import 'package:flutter_app_one/screens/login_screen.dart';
@@ -53,19 +51,6 @@ class _ManuallyControlledSliderState extends State<ManuallyControlledSlider> {
       child: Scaffold(
           extendBodyBehindAppBar: true,
           backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            title: const Center(
-              child: Text(
-                "ONBOARDING",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 25.0,
-                ),
-              ),
-            ),
-            backgroundColor: Colors.transparent,
-            elevation: 0.0,
-          ),
           body: Container(
             decoration: const BoxDecoration(
                 image: DecorationImage(

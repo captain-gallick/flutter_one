@@ -6,7 +6,6 @@ import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_app_one/constants/app_urls.dart';
 import 'package:flutter_app_one/data_models/areas.dart';
 import 'package:flutter_app_one/data_models/cities.dart';
@@ -21,6 +20,10 @@ import 'package:flutter_app_one/utils/globals.dart' as globals;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:video_player/video_player.dart';
+
+import '../data_models/user.dart';
 
 class BookServiceScreen extends StatefulWidget {
   final int depId;
@@ -28,6 +31,7 @@ class BookServiceScreen extends StatefulWidget {
   final String serviceId;
   final String vibhag;
   final String cameraImgPath = '';
+  final bool? login;
 
   const BookServiceScreen(
       {Key? key,
@@ -35,7 +39,8 @@ class BookServiceScreen extends StatefulWidget {
       required this.depId,
       required this.serviceName,
       required this.serviceId,
-      required this.vibhag})
+      required this.vibhag,
+      this.login})
       : super(key: key);
 
   @override
@@ -52,6 +57,7 @@ class _BookServiceScreenState extends State<BookServiceScreen>
   final nameController = TextEditingController();
   final buildingController = TextEditingController();
   final wardController = TextEditingController();
+  VideoPlayerController? _videoController;
 
   final int depId;
   final String serviceName;
@@ -72,9 +78,14 @@ class _BookServiceScreenState extends State<BookServiceScreen>
   String name = '-';
   String building = '-';
   String ward = '-';
+  double lati = 0;
+  double long = 0;
 
   List<Cities> cities = [];
   List<Areas> areas = [];
+
+  late BuildContext dialogContext, waitDialogContext;
+  late BuildContext buildContext;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -104,7 +115,7 @@ class _BookServiceScreenState extends State<BookServiceScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => getUserDetails());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => getUserInfo());
     WidgetsBinding.instance?.addObserver(this);
   }
 
@@ -117,33 +128,57 @@ class _BookServiceScreenState extends State<BookServiceScreen>
     nameController.dispose();
     buildingController.dispose();
     wardController.dispose();
+    if (_pickedVideo != null) {
+      _videoController!.dispose();
+    }
+
     WidgetsBinding.instance?.removeObserver(this);
     super.dispose();
   }
 
-  late BuildContext dialogContext, waitDialogContext;
-  late BuildContext buildContext;
-
-  getUserDetails() {
+  getUserInfo() async {
     globals.locationUpdated = false;
-    setState(() {
-      UserPreferences().getUser().then((value) {
-        name = name == '-' ? value.name : name;
-        nameController.text = name;
-        building = building == '-' ? value.building : building;
-        buildingController.text = building;
+    try {
+      showWaitLoader();
 
-        areaId = value.areaId;
-        areaText = value.areaId != '0' ? value.areaName : areaText;
-        ward = ward == '-' ? value.ward : ward;
-        wardController.text = ward;
+      List<String> array = await getCurrentLocation();
+      String lat = array[0].toString();
+      String lng = array[1].toString();
 
-        cityId = value.cityId;
-        cityText = value.cityId != '0' ? value.cityName : cityText;
+      lati = double.parse(lat);
+      long = double.parse(lng);
 
-        pincodeText = value.pincode == '0' ? pincodeText : value.pincode;
-      });
-    });
+      String token = '';
+      await UserPreferences().getToken().then((value) => {token = value});
+
+      final Response response = await get(
+        Uri.parse(AppUrl.updateUser),
+        headers: <String, String>{'token': token},
+      );
+      if (response.statusCode == 200) {
+        User user = User.fromJson(jsonDecode(response.body)['data']);
+
+        setState(() {
+          nameController.text = user.name;
+          buildingController.text = user.building;
+
+          areaId = user.areaId;
+          areaText = user.areaId != '0' ? user.areaName : areaText;
+
+          wardController.text = user.ward;
+
+          cityId = user.cityId;
+          cityText = user.cityId != '0' ? user.cityName : cityText;
+
+          pincodeText = user.pincode != '0' ? user.pincode : pincodeText;
+        });
+      }
+      log(response.body);
+    } catch (e) {
+      log(e.toString());
+    } finally {
+      Navigator.pop(waitDialogContext);
+    }
   }
 
   @override
@@ -156,29 +191,39 @@ class _BookServiceScreenState extends State<BookServiceScreen>
           children: <Widget>[
             Scaffold(
                 extendBodyBehindAppBar: true,
-                backgroundColor: Colors.white,
                 appBar: AppBar(
+                  backgroundColor: AppColors.backgroundcolor,
                   title: const Align(
                       alignment: Alignment(-0.25, 0.0),
                       child: Text(
                         "Book Service",
-                        style: TextStyle(color: AppColors.appGrey),
+                        style: TextStyle(color: AppColors.appTextDarkBlue),
                       )),
-                  backgroundColor: Colors.white,
                   elevation: 0.0,
                   leading: IconButton(
                       icon: const Icon(
                         Icons.chevron_left_rounded,
-                        color: AppColors.appGrey,
+                        color: AppColors.appTextDarkBlue,
                       ),
                       onPressed: () {
-                        Navigator.pushAndRemoveUntil(
+                        if (widget.login != null && widget.login == true) {
+                          Navigator.pushAndRemoveUntil(
+                            buildContext,
+                            MaterialPageRoute(
+                                builder: (BuildContext context) =>
+                                    const HomeScreen()),
+                            (route) => false,
+                          );
+                        } else {
+                          Navigator.pop(context);
+                        }
+                        /* Navigator.pushAndRemoveUntil(
                           buildContext,
                           MaterialPageRoute(
                               builder: (BuildContext context) =>
                                   const HomeScreen()),
                           (route) => false,
-                        );
+                        ); */
                       }),
                 ),
                 body: Container(
@@ -188,11 +233,21 @@ class _BookServiceScreenState extends State<BookServiceScreen>
         ),
       ),
       onWillPop: () async {
-        Navigator.pushReplacement(
+        if (widget.login != null && widget.login == true) {
+          Navigator.pushAndRemoveUntil(
+            buildContext,
+            MaterialPageRoute(
+                builder: (BuildContext context) => const HomeScreen()),
+            (route) => false,
+          );
+        } else {
+          Navigator.pop(context);
+        }
+        /*  Navigator.pushReplacement(
           buildContext,
           MaterialPageRoute(
               builder: (BuildContext context) => const HomeScreen()),
-        );
+        ); */
         return false;
       },
     ));
@@ -202,74 +257,200 @@ class _BookServiceScreenState extends State<BookServiceScreen>
     return Container(
         margin: const EdgeInsets.symmetric(vertical: 70.0),
         padding: const EdgeInsets.all(10.0),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-        ),
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              heading('Department (Vibhag)'),
-              MyTextField(
-                active: false,
-                hint: vibhag,
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: <
+                Widget>[
+          heading('Department (विभाग)*'),
+          MyTextField(
+            active: false,
+            hint: vibhag,
+          ),
+          heading('Service Name (सर्विस)*'),
+          MyTextField(
+            active: false,
+            hint: serviceName,
+          ),
+          heading('Full Name (नाम)*'),
+          MyTextField(
+            active: true,
+            type: TextInputType.name,
+            hint: 'Full Name (नाम)',
+            myController: nameController,
+          ),
+          heading('Building (ग्रह संख्या)*'),
+          MyTextField(
+            active: true,
+            type: TextInputType.streetAddress,
+            myController: buildingController,
+            hint: 'Building (ग्रह संख्या)',
+          ),
+          heading('Ward (वार्ड)*'),
+          MyTextField(
+            active: true,
+            type: TextInputType.streetAddress,
+            myController: wardController,
+            key: null,
+            hint: 'Ward (वार्ड)',
+          ),
+          heading('City (शहर)*'),
+          GestureDetector(
+            onTap: () {
+              NetworkCheckUp().checkConnection().then((value) {
+                if (value) {
+                  getCities();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Please connect to internet."),
+                  ));
+                }
+              });
+            },
+            child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(width: 1, color: AppColors.appGreen),
+                  borderRadius: BorderRadius.circular(32),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(cityText,
+                      style: const TextStyle(color: AppColors.lightTextColor)),
+                )),
+          ),
+          heading('Area (एरिया)*'),
+          GestureDetector(
+            onTap: () {
+              if (cityText != "Select City") {
+                NetworkCheckUp().checkConnection().then((value) {
+                  if (value) {
+                    getAreas(cityId);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("Please connect to internet."),
+                    ));
+                  }
+                });
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text(
+                    "Please Select city",
+                    style: TextStyle(color: AppColors.appTextLightBlue),
+                  ),
+                ));
+              }
+            },
+            child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(width: 1, color: AppColors.appGreen),
+                  borderRadius: BorderRadius.circular(32),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(areaText,
+                      style: const TextStyle(color: AppColors.lightTextColor)),
+                )),
+          ),
+          heading('Pincode (पिनकोड)*'),
+          Container(
+              decoration: BoxDecoration(
+                border: Border.all(width: 1, color: AppColors.appGreen),
+                borderRadius: BorderRadius.circular(32),
               ),
-              heading('Service Name'),
-              MyTextField(
-                active: false,
-                hint: serviceName,
-              ),
-              heading('Full Name*'),
-              MyTextField(
-                active: true,
-                type: TextInputType.name,
-                hint: 'Full Name',
-                myController: nameController,
-              ),
-              heading('Building*'),
-              MyTextField(
-                active: true,
-                type: TextInputType.streetAddress,
-                myController: buildingController,
-                hint: 'Building',
-              ),
-              heading('Ward*'),
-              MyTextField(
-                active: true,
-                type: TextInputType.streetAddress,
-                myController: wardController,
-                key: null,
-                hint: 'Ward',
-              ),
-              heading('City*'),
-              GestureDetector(
-                onTap: () {
-                  NetworkCheckUp().checkConnection().then((value) {
-                    if (value) {
-                      getCities();
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text("Please connect to internet."),
-                      ));
-                    }
-                  });
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Text(pincodeText,
+                    style: const TextStyle(color: AppColors.lightTextColor)),
+              )),
+          heading('Short Description (विवरण)'),
+          MyTextField(
+            myController: descriptionController,
+            type: TextInputType.multiline,
+            hint: "Please write a short description about the problem",
+          ),
+          const SizedBox(
+            height: 40.0,
+          ),
+          heading('Current Location'),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: FutureBuilder(
+                future: getCurrentLocation(), // async work
+                builder: (BuildContext context,
+                    AsyncSnapshot<List<String>> snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      return const Text('Loading....');
+                    default:
+                      if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else {
+                        String lat = snapshot.data![0].toString();
+                        String lng = snapshot.data![1].toString();
+                        LatLng latLng =
+                            LatLng(double.parse(lat), double.parse(lng));
+                        locationMarker = Marker(
+                          markerId: const MarkerId('position'),
+                          infoWindow:
+                              const InfoWindow(title: 'Marked location'),
+                          icon: BitmapDescriptor.defaultMarkerWithHue(
+                              BitmapDescriptor.hueGreen),
+                          position: latLng,
+                        );
+
+                        return SizedBox(
+                          height: 300.0,
+                          child: GoogleMap(
+                            initialCameraPosition:
+                                CameraPosition(target: latLng, zoom: 18),
+                            rotateGesturesEnabled: false,
+                            tiltGesturesEnabled: false,
+                            zoomControlsEnabled: false,
+                            scrollGesturesEnabled: false,
+                            zoomGesturesEnabled: false,
+                            mapType: MapType.normal,
+                            markers: {locationMarker},
+                            onMapCreated:
+                                (GoogleMapController controller) async {
+                              _mapController = controller;
+                              locationMarker = Marker(
+                                markerId: const MarkerId('position'),
+                                infoWindow:
+                                    const InfoWindow(title: 'Marked location'),
+                                icon: BitmapDescriptor.defaultMarkerWithHue(
+                                    BitmapDescriptor.hueGreen),
+                                position: latLng,
+                              );
+                            },
+                          ),
+                        );
+                      }
+                  }
                 },
-                child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xffF4F7FE),
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Text(cityText),
-                    )),
               ),
-              heading('Area*'),
-              GestureDetector(
-                onTap: () {
-                  if (cityText != "Select City") {
+            ),
+          ),
+          const SizedBox(
+            height: 20.0,
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              AppButton(
+                  title: 'CHANGE LOCATION',
+                  width: 200.0,
+                  onPressed: () {
                     NetworkCheckUp().checkConnection().then((value) {
                       if (value) {
-                        getAreas(cityId);
+                        saveData();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (BuildContext context) =>
+                                  const MarkLocationScreen()),
+                        ).then((value) {
+                          setState(() {});
+                        });
                       } else {
                         ScaffoldMessenger.of(context)
                             .showSnackBar(const SnackBar(
@@ -277,172 +458,100 @@ class _BookServiceScreenState extends State<BookServiceScreen>
                         ));
                       }
                     });
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Please Select city"),
-                    ));
-                  }
-                },
-                child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xffF4F7FE),
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Text(areaText),
-                    )),
-              ),
-              heading('Pincode*'),
-              Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xffF4F7FE),
-                    borderRadius: BorderRadius.circular(32),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Text(pincodeText),
-                  )),
-              heading('Short Description'),
-              MyTextField(
-                myController: descriptionController,
-                type: TextInputType.multiline,
-                hint: "Please write a short description about the problem",
-              ),
-              const SizedBox(
-                height: 40.0,
-              ),
-              heading('Current Location'),
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: FutureBuilder(
-                    future: getLocationText(), // async work
-                    builder:
-                        (BuildContext context, AsyncSnapshot<String> snapshot) {
-                      switch (snapshot.connectionState) {
-                        case ConnectionState.waiting:
-                          return const Text('Loading....');
-                        default:
-                          if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}');
-                          } else {
-                            return Text('${snapshot.data}');
-                          }
-                      }
-                    },
-                  ),
-                ),
-              ),
-              Row(
+                  }),
+            ],
+          ),
+          const SizedBox(
+            height: 40.0,
+          ),
+          Center(
+            child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  AppButton(
-                      title: 'CHANGE LOCATION',
-                      width: 200.0,
-                      onPressed: () {
-                        NetworkCheckUp().checkConnection().then((value) {
-                          if (value) {
-                            saveData();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (BuildContext context) =>
-                                      const MarkLocationScreen()),
-                            ).then((value) {
-                              setState(() {});
-                            });
-                          } else {
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(
-                              content: Text("Please connect to internet."),
-                            ));
-                          }
-                        });
-                      }),
-                ],
-              ),
-              const SizedBox(
-                height: 40.0,
-              ),
-              Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    Column(
-                      children: <Widget>[
-                        GestureDetector(
-                          child: DottedBorder(
-                            color: Colors.black,
-                            strokeWidth: 1,
-                            child: const Padding(
+                children: <Widget>[
+                  Column(
+                    children: <Widget>[
+                      GestureDetector(
+                        child: DottedBorder(
+                          color: Colors.black,
+                          strokeWidth: 1,
+                          child: const Padding(
                               padding: EdgeInsets.all(12.0),
-                              child: Text('Browse Photo'),
-                            ),
-                          ),
-                          onTap: () {
-                            pickFile();
-                          },
+                              child: Text('Browse Photo (फ़ोटो डालें)',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                  ))),
                         ),
-
-                        /* IconButton(
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        iconSize: 100.0,
-                        onPressed: () {
-                          pickFile();
+                        onTap: () {
+                          pickImageDialog();
+                          //pickFile();
                         },
-                        icon:
-                            Image.asset('assets/images/browse_photo_btn.png')), */
-                        Text(fileName),
-                      ],
-                    ),
-                    Column(
-                      children: <Widget>[
-                        GestureDetector(
-                          child: DottedBorder(
-                            color: Colors.black,
-                            strokeWidth: 1,
-                            child: const Padding(
-                              padding: EdgeInsets.all(12.0),
-                              child: Text('Browse Video'),
-                            ),
+                      ),
+                      //Text(fileName),
+                    ],
+                  ),
+                  Column(
+                    children: <Widget>[
+                      GestureDetector(
+                        child: DottedBorder(
+                          color: Colors.black,
+                          strokeWidth: 1,
+                          child: const Padding(
+                            padding: EdgeInsets.all(12.0),
+                            child: Text('Browse Video (विडीओ डालें)',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                )),
                           ),
-                          onTap: () {
-                            pickVideo();
-                          },
                         ),
-                        /* IconButton(
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        iconSize: 100.0,
-                        onPressed: () {
+                        onTap: () {
                           pickVideo();
                         },
-                        icon: Image.asset('assets/images/open_camera_btn.png')), */
-                        Text(videoName),
-                      ],
-                    ),
-                  ]),
-              const SizedBox(
-                height: 40.0,
-              ),
-              IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+                      ),
+                      //Text(videoName),
+                    ],
+                  ),
+                ]),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          Center(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                (_pickedImage != null
+                    ? Image.file(
+                        _pickedImage!,
+                        width: 150,
+                        height: 150,
+                      )
+                    : Container()),
+                _pickedVideo != null
+                    ? SizedBox(
+                        width: 120.0,
+                        height: 150.0,
+                        child: VideoPlayer(_videoController!),
+                      )
+                    : Container(),
+              ],
+            ),
+          ),
+          const SizedBox(
+            height: 40.0,
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              AppButton(
+                title: 'BOOK NOW',
+                width: 200.0,
                 onPressed: () async {
                   NetworkCheckUp().checkConnection().then((value) {
                     if (value) {
                       booknow();
-                      /* if (globals.locationUpdated) {
-                        booknow();
-                      } else {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(
-                          content: Text("Please mark your location."),
-                        ));
-                      } */
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text("Please connect to internet."),
@@ -450,11 +559,103 @@ class _BookServiceScreenState extends State<BookServiceScreen>
                     }
                   });
                 },
-                icon: Image.asset('assets/images/book_button.png'),
-                iconSize: 40.0,
-              )
-            ]));
+              ),
+            ],
+          ),
+          /* IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () async {
+              NetworkCheckUp().checkConnection().then((value) {
+                if (value) {
+                  booknow();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Please connect to internet."),
+                  ));
+                }
+              });
+            },
+            icon: Image.asset('assets/images/book_button.png'),
+            iconSize: 40.0,
+          ) */
+        ]));
   }
+
+  pickImageDialog() {
+    showDialog(
+        barrierDismissible: true,
+        context: buildContext,
+        builder: (BuildContext context) {
+          dialogContext = context;
+          return WillPopScope(
+              child: Dialog(
+                backgroundColor: AppColors.backgroundcolor,
+                child: SizedBox(
+                  height: 200,
+                  child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Select Image From',
+                              style:
+                                  TextStyle(color: AppColors.appTextDarkBlue),
+                            ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    pickImage(1);
+                                  },
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: const [
+                                      Icon(
+                                        Icons.image,
+                                        size: 100,
+                                        color: AppColors.appTextDarkBlue,
+                                      ),
+                                      Text('Gallery')
+                                    ],
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    pickImage(2);
+                                  },
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: const [
+                                      Icon(
+                                        Icons.camera_alt,
+                                        size: 100,
+                                        color: AppColors.appTextDarkBlue,
+                                      ),
+                                      Text('Camera')
+                                    ],
+                                  ),
+                                )
+                              ],
+                            )
+                          ])),
+                ),
+              ),
+              onWillPop: () async => true);
+        });
+  }
+
+  File? _pickedImage, _pickedVideo;
 
   Future<String> getLocationText() async {
     List<String> array = await getCurrentLocation();
@@ -535,14 +736,6 @@ class _BookServiceScreenState extends State<BookServiceScreen>
     }
   }
 
-  /* getCities() async {
-    saveData();
-    cities.add(Cities('1', 'Agra'));
-    cities.add(Cities('2', 'Ghaziabad'));
-
-    _listDialog(1);
-  } */
-
   Future<void> getAreas(String cityId) async {
     try {
       saveData();
@@ -580,68 +773,150 @@ class _BookServiceScreenState extends State<BookServiceScreen>
     }
   }
 
-  /* getAreas(String cityId) async {
-    saveData();
-    if (cityId == "1") {
-      areas.add(Areas('1', 'Shaganj', '282010'));
-      areas.add(Areas('2', 'Agra Fort', '282003'));
-      areas.add(Areas('3', 'Idgah Colony', '282001'));
-      areas.add(Areas('4', 'Jaipur House', '282002'));
-      areas.add(Areas('5', 'Ganesh Nagar', '282005'));
-    } else if (cityId == "2") {
-      areas.add(Areas('1', 'Vaishali', '201019'));
-      areas.add(Areas('2', 'Sultanpur', '201206'));
-      areas.add(Areas('3', 'Noida Sector 41', '201303'));
-      areas.add(Areas('4', 'Old Raj Nagar', '201002'));
-      areas.add(Areas('5', 'Hindon Air Field', '201004'));
-    }
-    _listDialog(2);
-  } */
+  updateList() {
+    setState(() {});
+  }
 
   void _listDialog(int i) {
+    List list = [];
+    if (i == 1) {
+      list = cities;
+    } else {
+      list = areas;
+    }
+
     showDialog(
         barrierDismissible: false,
         context: buildContext,
-        builder: (BuildContext context) {
+        builder: (context) {
           listDialogContext = context;
-          return Dialog(
-              backgroundColor: Colors.white,
-              child: Container(
-                constraints: const BoxConstraints(
-                    minHeight: 0, minWidth: double.infinity, maxHeight: 300),
-                //height: 300.0,
-                child: ListView.builder(
-                    shrinkWrap: true,
-                    scrollDirection: Axis.vertical,
-                    itemCount: (i == 1) ? cities.length : areas.length,
-                    itemBuilder: (context, position) {
-                      return GestureDetector(
-                        child: ListTile(
-                          title: Text((i == 1)
-                              ? cities[position].name
-                              : areas[position].name),
+          return StatefulBuilder(builder: (context, setState) {
+            return Dialog(
+                backgroundColor: Colors.white,
+                child: Container(
+                    constraints: const BoxConstraints(
+                        minHeight: 0,
+                        minWidth: double.infinity,
+                        maxHeight: 300),
+                    //height: 300.0,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextField(
+                            onChanged: (value) {
+                              setState(() {
+                                list = [];
+                                if (i == 1) {
+                                  for (int i = 0; i < cities.length; i++) {
+                                    if (cities[i]
+                                        .name
+                                        .toLowerCase()
+                                        .contains(value.toLowerCase())) {
+                                      list.add(cities[i]);
+                                    }
+                                  }
+                                } else {
+                                  for (int i = 0; i < areas.length; i++) {
+                                    if (areas[i]
+                                        .name
+                                        .toLowerCase()
+                                        .contains(value.toLowerCase())) {
+                                      list.add(areas[i]);
+                                    }
+                                  }
+                                }
+                              });
+                            },
+                            decoration:
+                                const InputDecoration(hintText: 'Search'),
+                          ),
                         ),
-                        onTap: () {
-                          Navigator.pop(listDialogContext);
-                          setState(() {
-                            if (i == 1) {
-                              cityText = cities[position].name;
-                              cityId = cities[position].id;
-                            } else {
-                              areaText = areas[position].name;
-                              areaId = areas[position].id;
-                              pincodeText = areas[position].pincode;
-                              log(pincodeText);
-                            }
-                          });
-                        },
-                      );
-                    }),
-              ));
+                        Expanded(
+                          child: ListView.builder(
+                              shrinkWrap: true,
+                              scrollDirection: Axis.vertical,
+                              itemCount: list.length,
+                              itemBuilder: (context, position) {
+                                return GestureDetector(
+                                  child: ListTile(
+                                    title: Text(list[position].name),
+                                  ),
+                                  onTap: () {
+                                    Navigator.pop(listDialogContext);
+
+                                    if (i == 1) {
+                                      cityText = list[position].name;
+                                      cityId = list[position].id;
+                                    } else {
+                                      areaText = list[position].name;
+                                      areaId = list[position].id;
+                                      pincodeText = list[position].pincode;
+                                      log(pincodeText);
+                                    }
+
+                                    updateList();
+                                  },
+                                );
+                              }),
+                        ),
+                      ],
+                    )));
+          });
         });
   }
 
-  pickFile() async {
+  pickImage(int i) async {
+    saveData();
+    final ImagePicker _picker = ImagePicker();
+    XFile? photo;
+
+    if (i == 1) {
+      photo = await _picker.pickImage(source: ImageSource.gallery);
+    } else if (i == 2) {
+      photo =
+          await _picker.pickImage(source: ImageSource.camera, imageQuality: 25);
+    }
+
+    if (photo != null) {
+      setState(() {
+        _pickedImage = File(photo!.path);
+        if (photo.name.length > 10) {
+          fileName = photo.name.substring(0, 10);
+        } else {
+          fileName = photo.name;
+        }
+      });
+    } else {
+      // User canceled the picker
+    }
+  }
+
+  pickVideo() async {
+    saveData();
+    final ImagePicker _picker = ImagePicker();
+
+    final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
+
+    if (video != null) {
+      setState(() {
+        _pickedVideo = File(video.path);
+
+        _videoController = VideoPlayerController.file(_pickedVideo!)
+          ..initialize();
+
+        if (video.name.length > 10) {
+          videoName = video.name.substring(0, 10);
+        } else {
+          videoName = video.name;
+        }
+      });
+    } else {
+      // User canceled the picker
+    }
+  }
+
+  /* pickFile() async {
     saveData();
 
     FilePickerResult? result =
@@ -682,7 +957,7 @@ class _BookServiceScreenState extends State<BookServiceScreen>
     } else {
       // User canceled the picker
     }
-  }
+  } */
 
   saveTempData() async {
     await UserPreferences().saveTempData(
@@ -695,8 +970,7 @@ class _BookServiceScreenState extends State<BookServiceScreen>
       child: Text(
         title,
         style: const TextStyle(
-          color: AppColors.appGrey,
-        ),
+            color: AppColors.appTextLightBlue, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -726,7 +1000,7 @@ class _BookServiceScreenState extends State<BookServiceScreen>
         });
   }
 
-  getCurrentLocation() async {
+  Future<List<String>> getCurrentLocation() async {
     String lat = "";
     String lng = "";
     await UserPreferences().getLocation().then((value) {
@@ -739,7 +1013,6 @@ class _BookServiceScreenState extends State<BookServiceScreen>
 
   booknow() async {
     try {
-      showLoader(1);
       List<String> array = await getCurrentLocation();
       String lat = array[0].toString();
       String lng = array[1].toString();
@@ -757,6 +1030,7 @@ class _BookServiceScreenState extends State<BookServiceScreen>
           cityText != 'Select City' &&
           pincodeText != 'Pincode' &&
           wardController.text.isNotEmpty) {
+        showLoader(1);
         var request = MultipartRequest("POST", Uri.parse(AppUrl.insertbooking));
         request.headers.addAll(<String, String>{"token": token});
 
@@ -776,19 +1050,25 @@ class _BookServiceScreenState extends State<BookServiceScreen>
         request.fields['lng'] = lng;
         request.fields['sdescr'] = descriptionController.text;
         if (fileName != '') {
-          request.files.add(MultipartFile(
+          /* request.files.add(MultipartFile(
               'media',
               File(media.path.toString()).readAsBytes().asStream(),
               File(media.path.toString()).lengthSync(),
               filename: media.path.toString().split("/").last,
+              contentType: MediaType('image', 'jpeg'))); */
+          request.files.add(MultipartFile(
+              'media',
+              File(_pickedImage!.path.toString()).readAsBytes().asStream(),
+              File(_pickedImage!.path.toString()).lengthSync(),
+              filename: _pickedImage!.path.toString().split("/").last,
               contentType: MediaType('image', 'jpeg')));
         }
         if (videoName != '') {
           request.files.add(MultipartFile(
               'media1',
-              File(media1.path.toString()).readAsBytes().asStream(),
-              File(media1.path.toString()).lengthSync(),
-              filename: media1.path.toString().split("/").last,
+              File(_pickedVideo!.path.toString()).readAsBytes().asStream(),
+              File(_pickedVideo!.path.toString()).lengthSync(),
+              filename: _pickedVideo!.path.toString().split("/").last,
               contentType: MediaType('video', 'mp4')));
         }
 
@@ -813,7 +1093,7 @@ class _BookServiceScreenState extends State<BookServiceScreen>
           ));
         }
       } else {
-        Navigator.pop(dialogContext);
+        //Navigator.pop(dialogContext);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text("Please fill all the details marked *."),
         ));
@@ -827,7 +1107,13 @@ class _BookServiceScreenState extends State<BookServiceScreen>
   late BuildContext mapDialogContext;
   CameraPosition initialLoaction =
       const CameraPosition(target: LatLng(27, 78), zoom: 14.47);
-  late Marker locationMarker = const Marker(markerId: MarkerId('position'));
+  late Marker locationMarker = Marker(
+    markerId: const MarkerId('position'),
+    infoWindow: const InfoWindow(title: 'Marked location'),
+    icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+    position: LatLng(lati, long),
+  );
+  // ignore: unused_field
   late GoogleMapController _mapController;
 
   void getLocationDialog() {

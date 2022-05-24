@@ -15,7 +15,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.0+1
+version: 4.0.0+7
 
 environment:
   sdk: ">=2.15.0-116.0.dev <3.0.0"
@@ -44,13 +44,22 @@ dependencies:
   dotted_border: ^2.0.0+1
   open_file: ^3.2.1
   flutter_lints: ^1.0.4
-  otp_autofill: ^2.1.0
-  sms_autofill: ^2.2.0
   google_maps_flutter: ^2.1.1
   location: ^4.3.0
   flutter_polyline_points: ^1.0.0
   dio: ^4.0.4
   url_launcher: ^6.0.20
+  firebase_core: ^1.13.1
+  firebase_database: ^9.0.8
+  flutter_html: ^2.2.1
+  html: ^0.15.0
+  skeletons: ^0.0.3
+  timer_count_down: ^2.2.1
+  sms_autofill: ^2.2.0
+  image_picker: ^0.8.5
+  video_player: ^2.4.0
+  pdf: ^3.8.1
+  printing: ^5.9.1
 
 dev_dependencies:
   flutter_test:
@@ -90,6 +99,7 @@ flutter:
     - assets/images/skip_button.png
     - assets/images/continue_button.png
     - assets/images/login_bg.png
+    - assets/images/login_bg_i.png
     - assets/images/lets_start_button.png
     - assets/images/slider1.png
     - assets/images/slider2.png
@@ -112,6 +122,8 @@ flutter:
     - assets/images/open_camera_btn.png
     - assets/images/map_pin.png
     - assets/images/car_icon.png
+    - assets/images/call_icon.png
+    - assets/images/splash_bg.png
 
   fonts:
     - family: Amsi

@@ -9,7 +9,10 @@ class AppButton extends StatelessWidget {
   final double? width;
 
   const AppButton(
-      {Key? key, required this.title, required this.onPressed, this.width})
+      {Key? key,
+      required this.title,
+      required this.onPressed,
+      this.width = 200})
       : super(key: key);
 
   @override
@@ -24,9 +27,9 @@ class AppButton extends StatelessWidget {
                   child: Center(
                     child: Text(title,
                         style: const TextStyle(
-                            color: AppColors.appGrey,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16.0)),
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        )),
                   )))),
       height: 40.0,
       width: width,

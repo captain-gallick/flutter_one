@@ -22,6 +22,7 @@ class MyBooking {
   String lat;
   String lng;
   String city;
+  String vendorName;
 
   MyBooking(
       {required this.id,
@@ -46,6 +47,7 @@ class MyBooking {
       required this.lat,
       required this.lng,
       required this.city,
+      required this.vendorName,
       this.serviceName = 'Service Name'});
 
   factory MyBooking.fromJson(Map<String, dynamic> responseData) {
@@ -72,6 +74,7 @@ class MyBooking {
         pincode: responseData['pincode'],
         ward: responseData['ward'],
         city: responseData['city'],
+        vendorName: responseData['vendor_name'] ?? '',
         serviceName: responseData['service_name'] ?? "");
   }
 }

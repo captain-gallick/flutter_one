@@ -1,9 +1,9 @@
 // ignore_for_file: empty_catches
 
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_one/constants/app_urls.dart';
@@ -11,12 +11,18 @@ import 'package:flutter_app_one/data_models/department.dart';
 import 'package:flutter_app_one/data_models/my_services.dart';
 import 'package:flutter_app_one/screens/book_service.dart';
 import 'package:flutter_app_one/screens/contact_screen.dart';
+import 'package:flutter_app_one/screens/jalprahari_registration.dart';
 import 'package:flutter_app_one/screens/search_screen.dart';
+import 'package:flutter_app_one/utils/app_colors.dart';
 import 'package:flutter_app_one/utils/network_connecttion.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:skeletons/skeletons.dart';
+import 'package:url_launcher/url_launcher.dart' as url_launcher;
+import 'package:html/parser.dart' show parse;
 import 'package:http/http.dart';
+import 'package:html/parser.dart';
 
-import 'book_track_screen.dart';
 import 'booking_history.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
@@ -41,6 +47,8 @@ class _HomeScreenState extends State<HomeScreen>
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   //late AnimationController animationController;
   int showDeps = -1;
+  int showThis = 1;
+  String selectedDep = 'Name';
 
   late double width;
   bool loggedIn = true;
@@ -80,16 +88,17 @@ class _HomeScreenState extends State<HomeScreen>
             if (showDeps == 2) {
               setState(() {
                 showDeps = -1;
+                showThis = 1;
                 getDepartments();
               });
             } else {
               if (loggedIn) {
+                SystemNavigator.pop();
+              } else {
                 Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const BookTrackScreen()));
-              } else {
-                SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+                        builder: (context) => const LoginScreen()));
               }
             }
           }
@@ -98,10 +107,11 @@ class _HomeScreenState extends State<HomeScreen>
         child: Stack(
           children: <Widget>[
             Container(
-              color: Colors.white,
+              color: AppColors.backgroundcolor,
               child: Scaffold(
                 key: _scaffoldKey,
                 drawer: Drawer(
+                  backgroundColor: AppColors.backgroundcolor,
                   child: getDrawer(),
                 ),
                 body: Column(
@@ -133,61 +143,154 @@ class _HomeScreenState extends State<HomeScreen>
                         /* const SizedBox(
                           width: 20.0,
                         ), */
-                        /* IconButton(
-                            onPressed: () {},
-                            icon: Image.asset('assets/images/bell.png')), */
+                        Positioned(
+                            top: 20,
+                            right: 10,
+                            child: IconButton(
+                              tooltip: 'Call Customer Care',
+                              onPressed: () {
+                                url_launcher.launch("tel://+919997667559");
+                              },
+                              icon: Image.asset('assets/images/call_icon.png'),
+                            )),
                       ],
                     ),
                     const SizedBox(
                       height: 20.0,
                     ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                        (showDeps == -1 || showDeps == 1)
-                            ? const Text(
-                                'Select a Department',
-                                style: TextStyle(fontSize: 30.0),
-                              )
-                            : const Text(
-                                'Book a Service',
-                                style: TextStyle(fontSize: 30.0),
-                              ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const SearchScreen()));
-                          },
-                          child: Container(
-                            decoration: const BoxDecoration(color: Colors.grey),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                children: const <Widget>[
-                                  Text(
-                                    'Search',
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          (showDeps == -1 || showDeps == 1)
+                              ? const Text(
+                                  'Select a Service',
+                                  style: TextStyle(
+                                    fontSize: 25.0,
+                                    color: AppColors.appTextDarkBlue,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  Icon(Icons.search)
-                                ],
+                                )
+                              : const Text(
+                                  'Click the Service you want',
+                                  style: TextStyle(
+                                      fontSize: 22.0,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.appTextDarkBlue),
+                                ),
+
+                          /* GestureDetector(
+                            onTap: () {
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SearchScreen()));
+                            },
+                            child: Container(
+                              decoration: const BoxDecoration(color: Colors.grey),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  children: const <Widget>[
+                                    Text(
+                                      'Search',
+                                    ),
+                                    Icon(Icons.search)
+                                  ],
+                                ),
                               ),
+                            ),
+                          ), */
+                        ],
+                      ),
+                    ),
+                    Visibility(
+                        visible: !(showDeps == -1 || showDeps == 1),
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    selectedDep,
+                                    style: const TextStyle(
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.appTextDarkBlue),
+                                  )),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Department',
+                                    style: TextStyle(
+                                        color: AppColors.appTextDarkBlue),
+                                  )),
+                            ),
+                          ],
+                        )),
+                    const SizedBox(
+                      height: 20.0,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SearchScreen()));
+                        },
+                        child: Container(
+                          decoration: const BoxDecoration(
+                              color: AppColors.appLightBlue,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(20)),
+                              shape: BoxShape.rectangle),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: const <Widget>[
+                                Icon(
+                                  Icons.search,
+                                  color: AppColors.appTextDarkBlue,
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 10),
+                                  child: Text(
+                                    'Search Something here',
+                                    style: TextStyle(
+                                        color: AppColors.lightTextColor),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
+                      ),
                     ),
                     const SizedBox(
                       height: 20.0,
                     ),
                     (showDeps == -1)
-                        ? Container()
+                        ? getSkeleton(showThis)
                         : (showDeps == 1)
                             ? getDepartmentList()
-                            // ignore: prefer_const_constructors
-                            : CarouselWithIndicatorDemo(),
+                            : getServicesList(),
+                    const Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Icon(
+                        Icons.keyboard_double_arrow_down,
+                        color: AppColors.appGreen,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -220,10 +323,12 @@ class _HomeScreenState extends State<HomeScreen>
               padding: const EdgeInsets.all(15.0),
               child: ListTile(
                 title: const Text("Booking History",
-                    style: TextStyle(fontSize: 20.0)),
+                    style: TextStyle(
+                        fontSize: 20.0, color: AppColors.appTextDarkBlue)),
                 onTap: () {
+                  Navigator.of(context).pop();
                   if (loggedIn) {
-                    Navigator.pushReplacement(
+                    Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) =>
@@ -238,13 +343,18 @@ class _HomeScreenState extends State<HomeScreen>
                 },
               ),
             ),
+            Container(
+                height: 1, color: const Color.fromARGB(255, 224, 224, 224)),
             Padding(
               padding: const EdgeInsets.all(15.0),
               child: ListTile(
-                title: const Text("Profile", style: TextStyle(fontSize: 20.0)),
+                title: const Text("Profile",
+                    style: TextStyle(
+                        fontSize: 20.0, color: AppColors.appTextDarkBlue)),
                 onTap: () {
+                  Navigator.of(context).pop();
                   if (loggedIn) {
-                    Navigator.pushReplacement(
+                    Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) => const ProfileScreen()));
@@ -258,12 +368,84 @@ class _HomeScreenState extends State<HomeScreen>
                 },
               ),
             ),
+            Container(
+                height: 1, color: const Color.fromARGB(255, 224, 224, 224)),
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: ListTile(
+                title: Column(
+                  children: [
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text("Jalprahari",
+                          style: TextStyle(
+                              fontSize: 20.0,
+                              color: AppColors.appTextDarkBlue)),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        if (loggedIn) {
+                          Navigator.of(context).pop();
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const JalprahariRegScreen()));
+                        } else {
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const LoginScreen()));
+                        }
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text("• Registration",
+                              style: TextStyle(
+                                  fontSize: 18.0,
+                                  color: AppColors.appTextDarkBlue)),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        if (loggedIn) {
+                          Navigator.pop(context);
+                          downloadCertificate();
+                        } else {
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const LoginScreen()));
+                        }
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text("• Download Certificate",
+                              style: TextStyle(
+                                  fontSize: 18.0,
+                                  color: AppColors.appTextDarkBlue)),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+            Container(
+                height: 1, color: const Color.fromARGB(255, 224, 224, 224)),
             Padding(
               padding: const EdgeInsets.all(15.0),
               child: (loggedIn
                   ? ListTile(
                       title: const Text("Logout",
-                          style: TextStyle(fontSize: 20.0)),
+                          style: TextStyle(
+                              fontSize: 20.0,
+                              color: AppColors.appTextDarkBlue)),
                       onTap: () {
                         UserPreferences prefs = UserPreferences();
                         prefs.removeUser();
@@ -274,8 +456,10 @@ class _HomeScreenState extends State<HomeScreen>
                       },
                     )
                   : ListTile(
-                      title:
-                          const Text("Login", style: TextStyle(fontSize: 20.0)),
+                      title: const Text("Login",
+                          style: TextStyle(
+                              fontSize: 20.0,
+                              color: AppColors.appTextDarkBlue)),
                       onTap: () {
                         Navigator.pushReplacement(
                             context,
@@ -284,13 +468,17 @@ class _HomeScreenState extends State<HomeScreen>
                       },
                     )),
             ),
+            Container(
+                height: 1, color: const Color.fromARGB(255, 224, 224, 224)),
             Padding(
               padding: const EdgeInsets.all(15.0),
               child: ListTile(
-                title:
-                    const Text("Contact Us", style: TextStyle(fontSize: 20.0)),
+                title: const Text("Contact Us",
+                    style: TextStyle(
+                        fontSize: 20.0, color: AppColors.appTextDarkBlue)),
                 onTap: () {
-                  Navigator.pushReplacement(
+                  Navigator.of(context).pop();
+                  Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) => const ContactScreen()));
@@ -301,6 +489,25 @@ class _HomeScreenState extends State<HomeScreen>
         )
       ],
     );
+  }
+
+  downloadCertificate() async {
+    showLoader();
+    String token = '';
+    await UserPreferences().getUser().then((value) => {token = value.token});
+    try {
+      services.clear();
+      final Response response =
+          await get(Uri.parse(AppUrl.jalprahari), headers: {'token': token});
+
+      if (jsonDecode(response.body).toString().contains('data')) {
+        log(response.body);
+        var url = jsonDecode(response.body)['data'];
+        log(url);
+        url_launcher.launch(Uri.parse(url).toString());
+        Navigator.pop(context);
+      } else {}
+    } catch (e) {}
   }
 
   getLoginStatus() async {
@@ -318,11 +525,11 @@ class _HomeScreenState extends State<HomeScreen>
   getDepartments() async {
     NetworkCheckUp().checkConnection().then((value) async {
       if (value) {
-        showLoader();
+        //showLoader();
         try {
           departments.clear();
           final Response response = await get(Uri.parse(AppUrl.departments));
-
+          log(response.body);
           if (jsonDecode(response.body).toString().contains('data')) {
             List<dynamic> list = jsonDecode(response.body)['data'];
             for (int i = 0; i < list.length; i++) {
@@ -335,7 +542,7 @@ class _HomeScreenState extends State<HomeScreen>
           } else {}
           //print('hello:' + departments.length.toString());
         } catch (e) {}
-        Navigator.pop(dialogContext);
+        //Navigator.pop(dialogContext);
         getLoginStatus();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -346,20 +553,21 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   getServicesByDepartment() async {
-    showLoader();
+    //showLoader();
     try {
       services.clear();
       final Response response =
           await get(Uri.parse(AppUrl.servicesByDepartment + depId.toString()));
 
       if (jsonDecode(response.body).toString().contains('data')) {
+        log(response.body);
         List<dynamic> list = jsonDecode(response.body)['data'];
         for (int i = 0; i < list.length; i++) {
           services.add(MyServices.fromJson(list[i]));
         }
         setState(() {
           showDeps = 2;
-          Navigator.pop(dialogContext);
+          //Navigator.pop(dialogContext);
         });
         //getCarousal();
       } else {}
@@ -409,6 +617,8 @@ class _HomeScreenState extends State<HomeScreen>
                     setState(() {
                       depId = int.parse(departments[position].id);
                       showDeps = -1;
+                      showThis = 2;
+                      selectedDep = departments[position].name;
                       getServicesByDepartment();
                     });
                   } else {
@@ -418,34 +628,290 @@ class _HomeScreenState extends State<HomeScreen>
                   }
                 });
               },
-              child: Card(
-                shadowColor: Colors.blueAccent,
-                elevation: 5,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Flexible(
-                      flex: 7,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Flexible(
+                    flex: 7,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: CircleAvatar(
+                        radius: 70,
+                        backgroundColor: AppColors.appAvatarBG,
                         child: Image.network(
-                            AppUrl.baseDomain + departments[position].icon),
+                          AppUrl.baseDomain + departments[position].icon,
+                          width: 55,
+                        ),
                       ),
                     ),
-                    Flexible(
-                      flex: 3,
-                      child: Text(
-                        departments[position].name,
-                        style: const TextStyle(fontSize: 18.0),
-                      ),
-                    )
-                  ],
-                ),
+                  ),
+                  Flexible(
+                    flex: 3,
+                    child: Text(
+                      departments[position].name,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 18.0, color: AppColors.appTextDarkBlue),
+                    ),
+                  )
+                ],
               ),
             );
           }),
     );
+  }
+
+  getSkeleton(int num) {
+    if (showThis == 1) {
+      return getDepartmentSkeleton();
+    } else {
+      return getServiceSkeleton();
+    }
+  }
+
+  getServicesSkeleton() {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 5.0),
+      elevation: 10.0,
+      shadowColor: Colors.blueAccent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+      child: SizedBox(
+        height: 400,
+        child: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Column(
+            children: <Widget>[
+              const Expanded(
+                child: SkeletonAvatar(
+                    style: SkeletonAvatarStyle(width: 200, height: 80)),
+              ),
+              const SizedBox(
+                height: 40.0,
+              ),
+              SkeletonLine(
+                style: SkeletonLineStyle(
+                    height: 16,
+                    width: 100,
+                    alignment: AlignmentDirectional.center,
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              SkeletonParagraph(
+                style: SkeletonParagraphStyle(
+                    lines: 3,
+                    spacing: 6,
+                    lineStyle: SkeletonLineStyle(
+                      randomLength: true,
+                      height: 10,
+                      borderRadius: BorderRadius.circular(8),
+                      minLength: MediaQuery.of(context).size.width,
+                    )),
+              ),
+              const SizedBox(
+                height: 20,
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  getDepartmentSkeleton() {
+    return Expanded(
+      child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2),
+          itemCount: 2,
+          itemBuilder: (context, position) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                const Flexible(
+                  flex: 7,
+                  child: Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: SkeletonAvatar(
+                        style: SkeletonAvatarStyle(width: 80, height: 80)),
+                  ),
+                ),
+                Flexible(
+                  flex: 3,
+                  child: SkeletonLine(
+                    style: SkeletonLineStyle(
+                        height: 16,
+                        width: 100,
+                        alignment: AlignmentDirectional.center,
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
+                )
+              ],
+            );
+          }),
+    );
+  }
+
+  getServiceSkeleton() {
+    return ListView.builder(
+      scrollDirection: Axis.vertical,
+      shrinkWrap: true,
+      itemCount: 4,
+      itemBuilder: (context, position) {
+        return Column(
+          children: [
+            Container(
+              height: 5.0,
+              color: Colors.grey.shade200,
+            ),
+            ListTile(
+              title: SkeletonLine(
+                style: SkeletonLineStyle(
+                    height: 16,
+                    width: 100,
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              subtitle: SkeletonLine(
+                style: SkeletonLineStyle(
+                    height: 16,
+                    width: 70,
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              trailing: const SkeletonAvatar(
+                  style: SkeletonAvatarStyle(width: 20, height: 20)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  getServicesList() {
+    return Expanded(
+      child: ListView.builder(
+        scrollDirection: Axis.vertical,
+        shrinkWrap: true,
+        itemCount: services.length,
+        itemBuilder: (context, position) {
+          return GestureDetector(
+              onTap: () async {
+                checkLogin(services[position]);
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 5, left: 20, right: 20),
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(
+                        color: Color.fromARGB(255, 235, 235, 235), width: 2),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  color: AppColors.appLightBlue,
+                  elevation: 5,
+                  child: SizedBox(
+                    height: 120,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: ListTile(
+                          title: Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: AppColors.appAvatarBG,
+                                radius: 50,
+                                child: Image.network(
+                                  AppUrl.baseDomain + services[position].image,
+                                  width: 55,
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 20),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        services[position].title,
+                                        style: const TextStyle(
+                                            fontSize: 16,
+                                            color: AppColors.appTextDarkBlue),
+                                      ),
+                                      const Text('Book Now',
+                                          style: TextStyle(
+                                              color: AppColors.appGreen)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          /* subtitle: const Text('Book Now',
+                              style: TextStyle(color: AppColors.appGreen)), */
+                          /* leading: CircleAvatar(
+                              backgroundColor: AppColors.appAvatarBG,
+                              child: Image.network(
+                                AppUrl.baseDomain + services[position].image,
+                                width: 55,
+                              ),
+                            ) */
+
+                          /* ClipRRect(
+                            child: SizedBox(
+                              height: 70.0,
+                              width: 70.0,
+                              child: getImage(position),
+                            ),
+                          ), */
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ));
+        },
+      ),
+    );
+  }
+
+  checkLogin(item) async {
+    String token = '';
+    await UserPreferences().getUser().then((value) => {token = value.token});
+    if (token == '') {
+      globals.depId = depId;
+      globals.item = item;
+      globals.gotoBookService = true;
+      gotoLogin();
+    } else {
+      NetworkCheckUp().checkConnection().then((value) {
+        if (value) {
+          gotoBookService(item);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Please connect to internet."),
+          ));
+        }
+      });
+    }
+  }
+
+  gotoBookService(item) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => BookServiceScreen(
+                  depId: depId,
+                  serviceName: item.title,
+                  vibhag: item.vibhag,
+                  serviceId: item.id,
+                )));
+  }
+
+  gotoLogin() {
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => const LoginScreen()));
   }
 
   Route createRoute(Widget page) {
@@ -525,6 +991,14 @@ class _CarouselWithIndicatorState extends State<CarouselWithIndicatorDemo> {
                                     padding: const EdgeInsets.all(15.0),
                                     child: Column(
                                       children: <Widget>[
+                                        /* Align(
+                                            alignment: Alignment.centerRight,
+                                            child: IconButton(
+                                                onPressed: () {
+                                                  showDescr(item);
+                                                },
+                                                icon: const Icon(Icons
+                                                    .info_outline_rounded))), */
                                         Expanded(
                                           child: ClipRRect(
                                             borderRadius:
@@ -544,7 +1018,37 @@ class _CarouselWithIndicatorState extends State<CarouselWithIndicatorDemo> {
                                               const TextStyle(fontSize: 25.0),
                                         ),
                                         const SizedBox(
-                                          height: 40.0,
+                                          height: 20,
+                                        ),
+                                        Row(
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                parse(item.description)
+                                                    .body!
+                                                    .text,
+                                                maxLines: 2,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Align(
+                                          alignment: Alignment.bottomLeft,
+                                          child: GestureDetector(
+                                              onTap: () {
+                                                showDescr(item);
+                                              },
+                                              child: const Text(
+                                                'Read more',
+                                                style: TextStyle(
+                                                  decoration:
+                                                      TextDecoration.underline,
+                                                  color: Colors.blue,
+                                                ),
+                                              )),
+                                        ),
+                                        const SizedBox(
+                                          height: 20,
                                         )
                                       ],
                                     ),
@@ -628,5 +1132,48 @@ class _CarouselWithIndicatorState extends State<CarouselWithIndicatorDemo> {
   gotoLogin() {
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+  }
+
+  void showDescr(item) {
+    showDialog(
+        barrierDismissible: true,
+        context: context,
+        builder: (BuildContext context) {
+          return WillPopScope(
+              child: Dialog(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      children: <Widget>[
+                        Center(
+                            child: Text(
+                          item.title,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 20),
+                        )),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(20.0),
+                          child: Image.network(
+                            AppUrl.baseDomain + item.image,
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        Html(data: item.description)
+                        //Text(_parseHtmlString(item.description)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              onWillPop: () async => true);
+        });
   }
 }

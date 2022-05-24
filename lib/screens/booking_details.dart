@@ -1,6 +1,5 @@
 import 'dart:developer';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_one/constants/app_urls.dart';
 import 'package:flutter_app_one/data_models/my_bookings.dart';
@@ -9,6 +8,10 @@ import 'package:flutter_app_one/screens/tracker_screen.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
 import 'package:flutter_app_one/utils/network_connecttion.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
+import 'package:flutter/rendering.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
   final MyBooking history;
@@ -21,10 +24,34 @@ class BookingDetailsScreen extends StatefulWidget {
 }
 
 class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
+  final GlobalKey<State<StatefulWidget>> _printKey = GlobalKey();
   late BuildContext buildContext;
 
   late BuildContext dialogContext;
   bool showTrack = false;
+
+  void _printScreen() {
+    Printing.layoutPdf(onLayout: (PdfPageFormat format) async {
+      final doc = pw.Document();
+
+      final image = await WidgetWraper.fromKey(
+        key: _printKey,
+        pixelRatio: 2.0,
+      );
+
+      doc.addPage(pw.Page(
+          pageFormat: format,
+          build: (pw.Context context) {
+            return pw.Center(
+              child: pw.Expanded(
+                child: pw.Image(image),
+              ),
+            );
+          }));
+
+      return doc.save();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,39 +59,57 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     return SafeArea(
         child: WillPopScope(
             onWillPop: () async {
-              Navigator.pushAndRemoveUntil(
+              Navigator.pop(context);
+              /* Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
                     builder: (BuildContext context) =>
                         const BookingHistoryScreen()),
                 (route) => false,
-              );
+              ); */
               return false;
             },
             child: Scaffold(
-              backgroundColor: Colors.white,
+              floatingActionButton: FloatingActionButton(
+                  onPressed: () {
+                    _printScreen();
+                  },
+                  child: const Icon(
+                    Icons.print,
+                    color: AppColors.appTextDarkBlue,
+                  )),
+              backgroundColor: AppColors.backgroundcolor,
               appBar: AppBar(
                 title: const Align(
-                    alignment: Alignment(-0.25, 0.0),
+                    //alignment: Alignment(-0.25, 0.0),
                     child: Text(
-                      "Details",
-                      style: TextStyle(color: AppColors.appGrey),
-                    )),
-                backgroundColor: Colors.white,
+                  "Details",
+                  style: TextStyle(color: AppColors.appTextDarkBlue),
+                )),
+                backgroundColor: AppColors.backgroundcolor,
                 elevation: 0.0,
+                actions: [
+                  IconButton(
+                      tooltip: 'Call Customer Care',
+                      icon: Image.asset('assets/images/call_icon.png'),
+                      onPressed: () {
+                        url_launcher.launch("tel://+919997667559");
+                      }),
+                ],
                 leading: IconButton(
                     icon: const Icon(
                       Icons.chevron_left_rounded,
-                      color: AppColors.appGrey,
+                      color: AppColors.appTextDarkBlue,
                     ),
                     onPressed: () {
-                      Navigator.pushAndRemoveUntil(
+                      Navigator.pop(context);
+                      /* Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
                             builder: (BuildContext context) =>
                                 const BookingHistoryScreen()),
                         (route) => false,
-                      );
+                      ); */
                     }),
               ),
               body: Padding(
@@ -84,66 +129,101 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20.0)),
                           child: SizedBox(
-                            height: 450,
                             width: 400,
-                            child: Padding(
-                              padding: const EdgeInsets.all(15.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(20.0),
-                                      child: getImage(),
+                            child: RepaintBoundary(
+                              key: _printKey,
+                              child: Padding(
+                                padding: const EdgeInsets.all(15.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Expanded(
+                                      child: ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(20.0),
+                                        child: getImage(),
+                                      ),
                                     ),
-                                  ),
-                                  const Padding(
-                                    padding:
-                                        EdgeInsets.symmetric(vertical: 5.0),
-                                    child: Text(
-                                      'Service Details:',
-                                      style: TextStyle(fontSize: 20.0),
+                                    const SizedBox(
+                                      height: 10,
                                     ),
-                                  ),
-                                  Text(
-                                    widget.history.serviceName,
-                                    style: const TextStyle(fontSize: 20.0),
-                                  ),
-                                  const Text(
-                                    'Description: ',
-                                    style: TextStyle(fontSize: 20.0),
-                                  ),
-                                  Text(
-                                    widget.history.sdescr,
-                                    style: const TextStyle(fontSize: 20.0),
-                                  ),
-                                  getVideo(widget.history.meadia1.isNotEmpty
-                                      ? 1
-                                      : 2),
-                                  const Text(
-                                    'Person Details: ',
-                                    style: TextStyle(fontSize: 20.0),
-                                  ),
-                                  Text(
-                                    widget.history.name,
-                                    style: const TextStyle(fontSize: 20.0),
-                                  ),
-                                  Text(
-                                    widget.history.email,
-                                    style: const TextStyle(fontSize: 20.0),
-                                  ),
-                                  Text(
-                                    widget.history.phone,
-                                    style: const TextStyle(fontSize: 20.0),
-                                  ),
-                                  Text(widget.history.addedOn.substring(0,
-                                          widget.history.addedOn.indexOf(" ")) +
-                                      " | " +
+                                    Text(
+                                      'Service Name: ' +
+                                          widget.history.serviceName,
+                                      style: const TextStyle(
+                                          fontSize: 16.0,
+                                          color: AppColors.appTextDarkBlue),
+                                    ),
+                                    Text(
+                                      'Service No: ' + widget.history.id,
+                                      style: const TextStyle(
+                                          fontSize: 16.0,
+                                          color: AppColors.appTextDarkBlue),
+                                    ),
+                                    Text(
+                                      'Description: ' + widget.history.sdescr,
+                                      style: const TextStyle(
+                                          fontSize: 16.0,
+                                          color: AppColors.appTextDarkBlue),
+                                    ),
+                                    getVideo(widget.history.meadia1.isNotEmpty
+                                        ? 1
+                                        : 2),
+                                    Visibility(
+                                        visible: ((widget.history.status ==
+                                                    '2' ||
+                                                widget.history.status == '3')
+                                            ? true
+                                            : false),
+                                        child: Text(
+                                          'Vendor Name: ' +
+                                              widget.history.vendorName,
+                                          style: const TextStyle(
+                                              color: AppColors.appTextDarkBlue),
+                                        )),
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
+                                    const Text(
+                                      'Personal Details',
+                                      style: TextStyle(
+                                          fontSize: 18.0,
+                                          color: AppColors.appTextDarkBlue),
+                                    ),
+                                    Text(
+                                      'Name: ' + widget.history.name,
+                                      style: const TextStyle(
+                                          fontSize: 16.0,
+                                          color: AppColors.appTextDarkBlue),
+                                    ),
+                                    Text(
+                                      'Phone: ' + widget.history.phone,
+                                      style: const TextStyle(
+                                          fontSize: 16.0,
+                                          color: AppColors.appTextDarkBlue),
+                                    ),
+                                    Text(
+                                      'Email: ' + widget.history.email,
+                                      style: const TextStyle(
+                                          fontSize: 16.0,
+                                          color: AppColors.appTextDarkBlue),
+                                    ),
+                                    Text(
                                       widget.history.addedOn.substring(
-                                          widget.history.addedOn.indexOf(" ")) +
-                                      " | " +
-                                      (getStatus(widget.history.status)))
-                                ],
+                                              0,
+                                              widget.history.addedOn
+                                                  .indexOf(" ")) +
+                                          " | " +
+                                          widget.history.addedOn.substring(
+                                              widget.history.addedOn
+                                                  .indexOf(" ")) +
+                                          " | " +
+                                          (getStatus(widget.history.status)),
+                                      style: const TextStyle(
+                                          color: AppColors.appTextDarkBlue),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -179,7 +259,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                       child: const Text(
                                         'TRACK',
                                         style: TextStyle(
-                                            color: Colors.black,
+                                            color: AppColors.appTextDarkBlue,
                                             fontSize: 20.0),
                                       )),
                                   /* OutlinedButton(
@@ -244,7 +324,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         ),
       );
     } else {
-      return const Text('');
+      return const SizedBox();
     }
   }
 

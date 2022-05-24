@@ -59,103 +59,114 @@ class _SearchScreenState extends State<SearchScreen> {
                 showSearch = false;
               });
             } else {
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()));
+              Navigator.pop(context);
+              /* Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen())); */
             }
           }
           return false;
         },
         child: Scaffold(
-          body: Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                  image: AssetImage('assets/images/background1.png'),
-                  fit: BoxFit.cover),
-            ),
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Stack(
-                    children: <Widget>[
-                      Positioned(
-                        left: 10,
-                        top: 20,
-                        child: IconButton(
-                            icon: const Icon(
-                              Icons.chevron_left_rounded,
-                              color: AppColors.appGrey,
-                            ),
-                            onPressed: () {
-                              if (showSearch) {
-                                setState(() {
-                                  showSearch = false;
-                                });
-                              } else {
-                                Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const HomeScreen()));
-                              }
-                            }),
+          body: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Stack(
+                  children: <Widget>[
+                    Positioned(
+                      left: 10,
+                      top: 20,
+                      child: IconButton(
+                          icon: const Icon(
+                            Icons.chevron_left_rounded,
+                            color: AppColors.appTextDarkBlue,
+                          ),
+                          onPressed: () {
+                            if (showSearch) {
+                              setState(() {
+                                showSearch = false;
+                              });
+                            } else {
+                              Navigator.pop(context);
+                              /* Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const HomeScreen())); */
+                            }
+                          }),
+                    ),
+                    Align(
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          height: 50.0,
+                        ),
                       ),
-                      Align(
-                        alignment: Alignment.center,
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        flex: 9,
                         child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Image.asset(
-                            'assets/images/logo_white.png',
-                            height: 50.0,
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          child: MyTextField(
+                            active: true,
+                            myController: searchController,
+                            hint: 'Service',
                           ),
                         ),
                       ),
+                      Flexible(
+                        flex: 1,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.search,
+                            color: AppColors.appTextDarkBlue,
+                          ),
+                          onPressed: () {
+                            NetworkCheckUp().checkConnection().then((value) {
+                              if (value) {
+                                search();
+                              } else {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(const SnackBar(
+                                  content: Text("Please connect to internet."),
+                                ));
+                              }
+                            });
+                          },
+                        ),
+                        /* child: AppButton(
+                          title: 'Search',
+                          onPressed: () {
+                            NetworkCheckUp().checkConnection().then((value) {
+                              if (value) {
+                                search();
+                              } else {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(const SnackBar(
+                                  content: Text("Please connect to internet."),
+                                ));
+                              }
+                            });
+                          },
+                        ), */
+                      )
                     ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Row(
-                      children: [
-                        Flexible(
-                          flex: 7,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 5.0),
-                            child: MyTextField(
-                              active: true,
-                              myController: searchController,
-                              hint: 'Service',
-                            ),
-                          ),
-                        ),
-                        Flexible(
-                          flex: 3,
-                          child: AppButton(
-                            title: 'Search',
-                            onPressed: () {
-                              NetworkCheckUp().checkConnection().then((value) {
-                                if (value) {
-                                  search();
-                                } else {
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(const SnackBar(
-                                    content:
-                                        Text("Please connect to internet."),
-                                  ));
-                                }
-                              });
-                            },
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                  Container(
-                    child:
-                        ((!showSearch) ? getDepartmentList() : getSearchList()),
-                  ),
-                ]),
-          ),
+                ),
+                Container(
+                  child:
+                      ((!showSearch) ? getDepartmentList() : getSearchList()),
+                ),
+              ]),
         ),
       ),
     );
@@ -181,7 +192,9 @@ class _SearchScreenState extends State<SearchScreen> {
           //getCarousal();
         } else {}
       }
-    } catch (e) {}
+    } catch (e) {
+      log(e.toString());
+    }
   }
 
   getDepartmentList() {
@@ -189,21 +202,27 @@ class _SearchScreenState extends State<SearchScreen> {
       child: ListView.builder(
           itemCount: mServiceCount.length,
           itemBuilder: (context, position) {
-            return Row(
-              children: <Widget>[
-                Flexible(
-                    child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 10.0),
-                  child: Text(
-                    mServiceCount[position].count.toString() +
-                        '     ' +
-                        mServiceCount[position].name,
-                    maxLines: 2,
-                    style: const TextStyle(fontSize: 20.0, color: Colors.white),
-                  ),
-                )),
-              ],
+            return GestureDetector(
+              onTap: () {
+                checkLogin(mServiceCount[position]);
+              },
+              child: Row(
+                children: <Widget>[
+                  Flexible(
+                      child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 10.0),
+                    child: Text(
+                      mServiceCount[position].count.toString() +
+                          '     ' +
+                          mServiceCount[position].title,
+                      maxLines: 2,
+                      style: const TextStyle(
+                          fontSize: 20.0, color: AppColors.appTextDarkBlue),
+                    ),
+                  )),
+                ],
+              ),
             );
           }),
     );
@@ -224,8 +243,8 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: Text(
                       services[position].title,
                       maxLines: 2,
-                      style:
-                          const TextStyle(fontSize: 20.0, color: Colors.white),
+                      style: const TextStyle(
+                          fontSize: 20.0, color: AppColors.appTextDarkBlue),
                     ),
                     onTap: () async {
                       checkLogin(services[position]);
@@ -242,13 +261,13 @@ class _SearchScreenState extends State<SearchScreen> {
     String token = '';
     await UserPreferences().getUser().then((value) => {token = value.token});
     if (token == '') {
-      globals.depId = depId;
+      /* globals.depId = depId;
       globals.item = item;
-      globals.gotoBookService = true;
-      Navigator.pushReplacement(context,
+      globals.gotoBookService = true; */
+      Navigator.push(context,
           MaterialPageRoute(builder: (context) => const LoginScreen()));
     } else {
-      Navigator.pushReplacement(
+      Navigator.push(
           context,
           MaterialPageRoute(
               builder: (context) => BookServiceScreen(
@@ -269,24 +288,41 @@ class _SearchScreenState extends State<SearchScreen> {
           serviceCount.clear();
           final Response response = await get(Uri.parse(AppUrl.services));
 
+          log(response.body);
           if (jsonDecode(response.body).toString().contains('data')) {
             List<dynamic> list = jsonDecode(response.body)['data'];
-            List<String> names = [];
+
+            List<MyServices> names = [];
 
             for (int i = 0; i < list.length; i++) {
-              names.add(list[i]['title']);
+              names.add(MyServices.fromJson(list[i]));
             }
 
             for (var names in names) {
               int count = 1;
               if (!serviceCount.containsKey(names)) {
                 serviceCount[names] = 1;
-                mServiceCount.add(ServiceCount(name: names, count: count));
+                mServiceCount.add(ServiceCount(
+                    title: names.title,
+                    count: count,
+                    id: names.id,
+                    vibhag: names.vibhag,
+                    depId: int.parse(names.departmentid)));
               } else {
                 count++;
                 serviceCount[names] += 1;
-                mServiceCount.remove(ServiceCount(name: names));
-                mServiceCount.add(ServiceCount(name: names, count: count));
+                mServiceCount.remove(ServiceCount(
+                    title: names.title,
+                    count: count,
+                    id: names.id,
+                    vibhag: names.vibhag,
+                    depId: int.parse(names.departmentid)));
+                mServiceCount.add(ServiceCount(
+                    title: names.title,
+                    count: count,
+                    id: names.id,
+                    vibhag: names.vibhag,
+                    depId: int.parse(names.departmentid)));
               }
             }
             Navigator.pop(dialogContext);

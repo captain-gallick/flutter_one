@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app_one/screens/home_screen.dart';
+import 'package:flutter_app_one/utils/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -10,17 +11,18 @@ class ContactScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        Navigator.pushAndRemoveUntil(
+        Navigator.pop(context);
+        /* Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
               builder: (BuildContext context) => const HomeScreen()),
           (route) => false,
-        );
+        ); */
         return false;
       },
       child: SafeArea(
           child: Scaffold(
-        extendBodyBehindAppBar: true,
+        /* extendBodyBehindAppBar: true,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -37,153 +39,194 @@ class ContactScreen extends StatelessWidget {
                 Icons.chevron_left_rounded,
                 color: Colors.black,
               )),
-        ),
-        body: Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-                image: DecorationImage(
-              image: AssetImage('assets/images/background1.png'),
-              fit: BoxFit.cover,
-            )),
-            child: Stack(
-              alignment: AlignmentDirectional.center,
-              children: <Widget>[
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Image.asset('assets/images/road.png'),
-                ),
-                Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 20, 0, 20),
-                      child: Image.asset(
-                        'assets/images/logo_white_big.png',
-                        width: 100,
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.all(20.0),
-                      child: Text(
-                        'CONTACT',
-                        style: TextStyle(color: Colors.white, fontSize: 30.0),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      child: SizedBox(
-                        width: 300,
-                        child: ListTile(
-                            dense: true,
-                            title: Column(
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    url_launcher.launch("tel://+91903576567");
-                                  },
-                                  child: const Text(
-                                    '+(91) 90357 6567',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 20.0),
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    url_launcher.launch("tel://+91903585557");
-                                  },
-                                  child: const Text(
-                                    '+(91) 90358 5557',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 20.0),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            leading: Image.asset(
-                              'assets/images/mobile.png',
-                              width: 50,
+        ), */
+        body: Stack(
+          alignment: AlignmentDirectional.center,
+          children: <Widget>[
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Image.asset('assets/images/road.png'),
+            ),
+            Column(
+              children: [
+                Stack(
+                  children: <Widget>[
+                    Positioned(
+                      top: 20,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              /* Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        const HomeScreen()),
+                                (route) => false,
+                              ); */
+                            },
+                            icon: const Icon(
+                              Icons.chevron_left,
+                              color: AppColors.appTextDarkBlue,
                             )),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-                      child: SizedBox(
-                        width: 300,
-                        child: ListTile(
-                            dense: true,
-                            title: Align(
-                              alignment: const Alignment(-0.2, 0),
-                              child: Column(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      final Uri params = Uri(
-                                          scheme: 'mailto',
-                                          path: 'info@maljal.org');
-
-                                      var url = params.toString();
-                                      launch(url);
-                                    },
-                                    child: const Text(
-                                      'info@maljal.org',
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 20.0),
-                                    ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      final Uri params = Uri(
-                                          scheme: 'mailto',
-                                          path: 'help@maljal.org');
-
-                                      var url = params.toString();
-                                      launch(url);
-                                    },
-                                    child: const Text(
-                                      'help@maljal.org',
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 20.0),
-                                    ),
-                                  ),
-                                ],
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          width: 150,
+                        ),
+                      ),
+                    ),
+                    /* const SizedBox(
+                          width: 20.0,
+                        ), */
+                    Positioned(
+                        top: 20,
+                        right: 10,
+                        child: IconButton(
+                          tooltip: 'Call Customer Care',
+                          onPressed: () {
+                            url_launcher.launch("tel://+919997667559");
+                          },
+                          icon: Image.asset('assets/images/call_icon.png'),
+                        )),
+                  ],
+                ),
+                /* Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 20, 0, 20),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 100,
+                  ),
+                ), */
+                const Padding(
+                  padding: EdgeInsets.only(top: 80, bottom: 40),
+                  child: Text(
+                    'CONTACT',
+                    style: TextStyle(
+                        color: AppColors.appTextDarkBlue,
+                        fontSize: 25.0,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: SizedBox(
+                    width: 300,
+                    child: ListTile(
+                        dense: true,
+                        title: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                url_launcher.launch("tel://+919997667559");
+                              },
+                              child: const Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '+(91) 9997667559',
+                                  style: TextStyle(
+                                      color: AppColors.appTextDarkBlue,
+                                      fontSize: 18.0),
+                                ),
                               ),
                             ),
-                            leading: Image.asset(
-                              'assets/images/mail.png',
-                              width: 50,
-                            )),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 300,
-                      child: ListTile(
-                          dense: true,
-                          title: Align(
-                            alignment: const Alignment(1, 0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  'maljal@skype',
+                          ],
+                        ),
+                        leading: Image.asset(
+                          'assets/images/mobile.png',
+                          width: 50,
+                        )),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+                  child: SizedBox(
+                    width: 300,
+                    child: ListTile(
+                        dense: true,
+                        title: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Column(
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  final Uri params = Uri(
+                                      scheme: 'mailto',
+                                      path: 'info@maljal.org');
+
+                                  var url = params.toString();
+                                  launch(url);
+                                },
+                                child: const Text(
+                                  'info@maljal.org',
                                   style: TextStyle(
-                                      color: Colors.white, fontSize: 20.0),
+                                      color: AppColors.appTextDarkBlue,
+                                      fontSize: 18.0),
                                 ),
-                                Text(
-                                  'maljal_business@skype',
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  final Uri params = Uri(
+                                      scheme: 'mailto',
+                                      path: 'help@maljal.org');
+
+                                  var url = params.toString();
+                                  launch(url);
+                                },
+                                child: const Text(
+                                  'help@maljal.org',
                                   style: TextStyle(
-                                      color: Colors.white, fontSize: 20.0),
+                                      color: AppColors.appTextDarkBlue,
+                                      fontSize: 18.0),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          leading: Image.asset(
-                            'assets/images/message.png',
-                            width: 50,
-                          )),
-                    ),
-                  ],
-                )
+                        ),
+                        leading: Image.asset(
+                          'assets/images/mail.png',
+                          width: 50,
+                        )),
+                  ),
+                ),
+                SizedBox(
+                  width: 300,
+                  child: ListTile(
+                      dense: true,
+                      title: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'maljal@skype',
+                              style: TextStyle(
+                                  color: AppColors.appTextDarkBlue,
+                                  fontSize: 18.0),
+                            ),
+                            Text(
+                              'maljal_business@skype',
+                              style: TextStyle(
+                                  color: AppColors.appTextDarkBlue,
+                                  fontSize: 18.0),
+                            ),
+                          ],
+                        ),
+                      ),
+                      leading: Image.asset(
+                        'assets/images/message.png',
+                        width: 50,
+                      )),
+                ),
               ],
-            )),
+            )
+          ],
+        ),
       )),
     );
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_app_one/my_widgets/app_button.dart';
 import 'package:flutter_app_one/screens/registration_screen.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
@@ -34,50 +34,58 @@ class _BookTrackScreenState extends State<BookTrackScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-        child: Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-            image: DecorationImage(
-          image: AssetImage('assets/images/login_bg.png'),
-          fit: BoxFit.cover,
-        )),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Center(
-                child: Column(
-              children: <Widget>[
-                Image.asset(
-                  'assets/images/logo.png',
-                  width: 210.0,
-                ),
-                const SizedBox(
-                  height: 80.0,
-                ),
-                AppButton(
-                    title: 'BOOK A SERVICE', width: 200.0, onPressed: gotoHome),
-                const SizedBox(
-                  height: 40.0,
-                ),
-                AppButton(
-                    title: 'TRACK A SERVICE',
-                    width: 200.0,
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  const BookingHistoryScreen()));
-                    }),
-              ],
-            ))
-          ],
+    return WillPopScope(
+      onWillPop: () async {
+        SystemNavigator.pop();
+        return false;
+      },
+      child: SafeArea(
+          child: Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+              image: DecorationImage(
+            image: AssetImage('assets/images/login_bg.png'),
+            fit: BoxFit.cover,
+          )),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Center(
+                  child: Column(
+                children: <Widget>[
+                  Image.asset(
+                    'assets/images/logo.png',
+                    width: 210.0,
+                  ),
+                  const SizedBox(
+                    height: 80.0,
+                  ),
+                  AppButton(
+                      title: 'BOOK A SERVICE',
+                      width: 200.0,
+                      onPressed: gotoHome),
+                  const SizedBox(
+                    height: 40.0,
+                  ),
+                  AppButton(
+                      title: 'TRACK A SERVICE',
+                      width: 200.0,
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const BookingHistoryScreen()));
+                      }),
+                ],
+              ))
+            ],
+          ),
         ),
-      ),
-    ));
+      )),
+    );
   }
 
   void showLoader() {

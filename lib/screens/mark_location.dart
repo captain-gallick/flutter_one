@@ -1,10 +1,18 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_app_one/data_models/search_location.dart';
+import 'package:flutter_app_one/my_widgets/text_field.dart';
+import 'package:flutter_app_one/utils/app_colors.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart';
 import 'package:location/location.dart';
 import 'package:flutter_app_one/utils/globals.dart' as globals;
+import 'package:flutter_app_one/constants/.env.dart';
+
+import '../data_models/places.dart';
 
 class MarkLocationScreen extends StatefulWidget {
   const MarkLocationScreen({Key? key}) : super(key: key);
@@ -14,14 +22,17 @@ class MarkLocationScreen extends StatefulWidget {
 }
 
 class _MarkLocationScreenState extends State<MarkLocationScreen> {
+  final TextEditingController _searchController = TextEditingController();
   late CameraPosition initialLoaction =
       const CameraPosition(target: LatLng(27, 78), zoom: 14.47);
   late Marker locationMarker = const Marker(markerId: MarkerId('position'));
   late GoogleMapController _mapController;
   late BuildContext waitDialogContext, buildContext;
+  List<Places> places = [];
   @override
   void dispose() {
     _mapController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -36,15 +47,6 @@ class _MarkLocationScreenState extends State<MarkLocationScreen> {
     buildContext = context;
     return SafeArea(
       child: Scaffold(
-        body: GoogleMap(
-          onTap: _addMarker,
-          initialCameraPosition: initialLoaction,
-          mapType: MapType.normal,
-          markers: {locationMarker},
-          onMapCreated: (GoogleMapController controller) {
-            _mapController = controller;
-          },
-        ),
         floatingActionButton: FloatingActionButton.extended(
           tooltip: 'MARK LOCATION',
           label: const Text('DONE'),
@@ -57,8 +59,133 @@ class _MarkLocationScreenState extends State<MarkLocationScreen> {
             }
           },
         ),
+        body: Stack(
+          children: [
+            GoogleMap(
+              onTap: _addMarker,
+              initialCameraPosition: initialLoaction,
+              mapType: MapType.normal,
+              markers: {locationMarker},
+              onMapCreated: (GoogleMapController controller) {
+                _mapController = controller;
+              },
+            ),
+            Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: AppColors.backgroundcolor,
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(width: 1, color: AppColors.appGreen)),
+                  child: Stack(
+                    children: [
+                      TextField(
+                        controller: _searchController,
+                        decoration: const InputDecoration(
+                          prefixIcon: Text(
+                            '   ',
+                            style: TextStyle(color: AppColors.lightTextColor),
+                          ),
+                          prefixIconConstraints:
+                              BoxConstraints(minWidth: 0, minHeight: 0),
+                          hintText: 'Search',
+                          border: InputBorder.none,
+                        ),
+                        onChanged: (value) {
+                          searchPlace(value);
+                        },
+                      ),
+                      Positioned(
+                        right: 10,
+                        child: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _searchController.text = '';
+                                places.clear();
+                              });
+                            },
+                            icon: const Icon(Icons.close_rounded)),
+                      )
+                    ],
+                  ),
+                )),
+            if (places.isNotEmpty)
+              Positioned(
+                top: 65,
+                left: 8,
+                right: 8,
+                child: Container(
+                    height: 300,
+                    decoration: const BoxDecoration(
+                      color: AppColors.backgroundcolor,
+                    )),
+              ),
+            if (places.isNotEmpty)
+              Positioned(
+                top: 65,
+                left: 8,
+                right: 8,
+                child: SizedBox(
+                  height: 300,
+                  child: ListView.builder(
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                          onTap: () {
+                            getLocation(places[index].placeId);
+                            places.clear();
+                          },
+                          title: Text(places[index].description,
+                              style: const TextStyle(
+                                  color: AppColors.appTextDarkBlue)));
+                    },
+                    itemCount: places.length,
+                  ),
+                ),
+              )
+          ],
+        ),
       ),
     );
+  }
+
+  searchPlace(searchTerm) async {
+    places.clear();
+    String searchUrl =
+        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$searchTerm&key=' +
+            googleAPIKey;
+    try {
+      Response _response = await get(Uri.parse(searchUrl));
+      List<dynamic> list = jsonDecode(_response.body)['predictions'];
+      for (int i = 0; i < list.length; i++) {
+        places.add(Places.fromJson(list[i]));
+      }
+      setState(() {});
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
+  getLocation(String placeId) async {
+    String placeDetailsUrl =
+        'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=' +
+            googleAPIKey;
+    try {
+      Response _response = await get(Uri.parse(placeDetailsUrl));
+      var json = jsonDecode(_response.body);
+      var jsonResult = json['result'] as Map<String, dynamic>;
+      gotoNewLocation(Place.fromJson(jsonResult));
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
+  gotoNewLocation(Place place) {
+    _mapController.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+        target:
+            LatLng(place.geometry.location.lat, place.geometry.location.lng),
+        zoom: 18.0)));
+    _addMarker(
+        LatLng(place.geometry.location.lat, place.geometry.location.lng));
   }
 
   getCurrentLocation() async {
