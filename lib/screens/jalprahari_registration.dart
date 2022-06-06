@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_app_one/data_models/state_city_model.dart';
 import 'package:http/http.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
@@ -32,12 +33,27 @@ class _JalprahariRegScreenState extends State<JalprahariRegScreen> {
   TextEditingController stateController = TextEditingController();
 
   File? _pickedImage;
-  late BuildContext buildContext, dialogContext;
+  late BuildContext buildContext, dialogContext, listDialogContext;
+  List<StateCity> statesCities = [];
+  String stateId = '';
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    //phoneController.dispose();
+    addressController.dispose();
+    cityController.dispose();
+    pincodeController.dispose();
+    stateController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     buildContext = context;
     dialogContext = context;
+    listDialogContext = context;
     return SafeArea(
         child: WillPopScope(
       onWillPop: () async {
@@ -102,12 +118,37 @@ class _JalprahariRegScreenState extends State<JalprahariRegScreen> {
             key: null,
             myController: addressController,
           ),
+          heading('State (राज्य)*'),
+          GestureDetector(
+            onTap: () {
+              getLists(1);
+            },
+            child: MyTextField(
+              type: TextInputType.name,
+              hint: "State (राज्य)",
+              key: null,
+              active: false,
+              myController: stateController,
+            ),
+          ),
           heading('City (शहर)*'),
-          MyTextField(
-            type: TextInputType.name,
-            hint: "City (शहर)",
-            key: null,
-            myController: cityController,
+          GestureDetector(
+            onTap: () {
+              if (stateId != '') {
+                getLists(2);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Please select state first.'),
+                ));
+              }
+            },
+            child: MyTextField(
+              type: TextInputType.name,
+              hint: "City (शहर)",
+              active: false,
+              key: null,
+              myController: cityController,
+            ),
           ),
           heading('Pincode (पिनकोड)*'),
           MyTextField(
@@ -116,13 +157,6 @@ class _JalprahariRegScreenState extends State<JalprahariRegScreen> {
               key: null,
               length: 6,
               myController: pincodeController),
-          heading('State (राज्य)*'),
-          MyTextField(
-            type: TextInputType.name,
-            hint: "State (राज्य)",
-            key: null,
-            myController: stateController,
-          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 20),
             child: GestureDetector(
@@ -375,5 +409,132 @@ class _JalprahariRegScreenState extends State<JalprahariRegScreen> {
               ),
               onWillPop: () async => true);
         });
+  }
+
+  void _listDialog(int i) {
+    List list = [];
+    list = statesCities;
+    log('here');
+
+    showDialog(
+        barrierDismissible: false,
+        context: listDialogContext,
+        builder: (context) {
+          listDialogContext = context;
+          return StatefulBuilder(builder: (listDialogContext, setState) {
+            return Dialog(
+                backgroundColor: Colors.white,
+                child: Container(
+                    constraints: const BoxConstraints(
+                        minHeight: 0,
+                        minWidth: double.infinity,
+                        maxHeight: 300),
+                    //height: 300.0,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextField(
+                            onChanged: (value) {
+                              setState(() {
+                                list = [];
+                                for (int i = 0; i < statesCities.length; i++) {
+                                  if (statesCities[i]
+                                      .name
+                                      .toLowerCase()
+                                      .contains(value.toLowerCase())) {
+                                    list.add(statesCities[i]);
+                                  }
+                                }
+                              });
+                            },
+                            decoration:
+                                const InputDecoration(hintText: 'Search'),
+                          ),
+                        ),
+                        Expanded(
+                          child: ListView.builder(
+                              shrinkWrap: true,
+                              scrollDirection: Axis.vertical,
+                              itemCount: list.length,
+                              itemBuilder: (context, position) {
+                                return GestureDetector(
+                                  child: ListTile(
+                                    title: Text(list[position].name),
+                                  ),
+                                  onTap: () {
+                                    Navigator.pop(listDialogContext);
+
+                                    if (i == 1) {
+                                      stateController.text =
+                                          list[position].name;
+                                      stateId = list[position].id;
+                                      log(stateController.text);
+                                    } else {
+                                      cityController.text = list[position].name;
+                                    }
+                                    updateList();
+                                  },
+                                );
+                              }),
+                        ),
+                      ],
+                    )));
+          });
+        });
+  }
+
+  updateList() {
+    setState(() {});
+  }
+
+  getLists(int i) {
+    if (i == 1) {
+      getStateCity(i, AppUrl.states);
+    } else {
+      getStateCity(i, AppUrl.jcity + stateId);
+    }
+  }
+
+  Future<void> getStateCity(int i, String url) async {
+    try {
+      statesCities = [];
+      showWaitLoader(1);
+      String token = '';
+
+      await UserPreferences().getUser().then((value) => {
+            token = value.token,
+          });
+      final Response response = await get(
+        Uri.parse(url),
+        headers: <String, String>{
+          'token': token,
+        },
+      );
+
+      log(response.body);
+      if (jsonDecode(response.body)['data'] == null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              jsonDecode(response.body)['message'].toString().toUpperCase()),
+        ));
+      } else {
+        List<dynamic> list = jsonDecode(response.body)['data'];
+        if (i == 1) {
+          for (int i = 0; i < list.length; i++) {
+            statesCities.add(StateCity.stateFromJson(list[i]));
+          }
+        } else {
+          for (int i = 0; i < list.length; i++) {
+            statesCities.add(StateCity.cityFromJson(list[i]));
+          }
+        }
+
+        Navigator.pop(dialogContext);
+        _listDialog(i);
+      }
+    } catch (e) {
+      log(e.toString());
+    }
   }
 }

@@ -10,6 +10,7 @@ import 'package:flutter_app_one/utils/network_connecttion.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:http/http.dart';
 import 'package:skeletons/skeletons.dart';
+import 'package:url_launcher/url_launcher.dart' as url_launcher;
 
 import 'home_screen.dart';
 
@@ -59,6 +60,13 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
             appBar: AppBar(
               actions: [
                 IconButton(
+                  tooltip: 'Call Customer Care',
+                  onPressed: () {
+                    url_launcher.launch("tel://+919997667559");
+                  },
+                  icon: Image.asset('assets/images/call_icon.png'),
+                )
+                /* IconButton(
                     onPressed: () {
                       NetworkCheckUp().checkConnection().then((value) {
                         showHistory = true;
@@ -75,7 +83,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                       });
                     },
                     icon: const Icon(Icons.replay_rounded,
-                        color: AppColors.appTextDarkBlue))
+                        color: AppColors.appTextDarkBlue)) */
               ],
               title: const Align(
                   alignment: Alignment(-0.25, 0.0),
@@ -121,60 +129,78 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   }
 
   getList() {
-    return ListView.builder(
-      scrollDirection: Axis.vertical,
-      shrinkWrap: true,
-      itemCount: history.length,
-      itemBuilder: (context, position) {
-        return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (BuildContext context) => BookingDetailsScreen(
-                            history: history[position],
-                          )));
-            },
-            child: Container(
-              color: AppColors.appLightBlue,
-              child: Column(
-                children: [
-                  Container(
-                    height: 5.0,
-                    color: Colors.grey.shade200,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ListTile(
-                      title: Text(
-                        history[position].serviceName,
-                        style: const TextStyle(
-                            fontSize: 18.0, color: AppColors.appTextDarkBlue),
+    return RefreshIndicator(
+        onRefresh: () async {
+          NetworkCheckUp().checkConnection().then((value) {
+            showHistory = !showHistory;
+            if (value) {
+              setState(() {
+                getBookingHistory();
+              });
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text("Please connect to internet."),
+              ));
+            }
+          });
+        },
+        child: ListView.builder(
+          scrollDirection: Axis.vertical,
+          shrinkWrap: true,
+          itemCount: history.length,
+          itemBuilder: (context, position) {
+            return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (BuildContext context) =>
+                              BookingDetailsScreen(
+                                history: history[position],
+                              )));
+                },
+                child: Container(
+                  color: AppColors.appLightBlue,
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 5.0,
+                        color: Colors.grey.shade200,
                       ),
-                      subtitle: Text(
-                        history[position].addedOn.substring(
-                                0, history[position].addedOn.indexOf(" ")) +
-                            " | " +
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ListTile(
+                          title: Text(
+                            history[position].serviceName,
+                            style: const TextStyle(
+                                fontSize: 18.0,
+                                color: AppColors.appTextDarkBlue),
+                          ),
+                          subtitle: Text(
                             history[position].addedOn.substring(
-                                history[position].addedOn.indexOf(" ")) +
-                            " | " +
-                            (getStatus(history[position].status)),
-                        style: const TextStyle(color: AppColors.lightTextColor),
-                      ),
-                      trailing: ClipRRect(
-                        child: SizedBox(
-                          height: 70.0,
-                          width: 70.0,
-                          child: getImage(position),
+                                    0, history[position].addedOn.indexOf(" ")) +
+                                " | " +
+                                history[position].addedOn.substring(
+                                    history[position].addedOn.indexOf(" ")) +
+                                " | " +
+                                (getStatus(history[position].status)),
+                            style: const TextStyle(
+                                color: AppColors.lightTextColor),
+                          ),
+                          trailing: ClipRRect(
+                            child: SizedBox(
+                              height: 70.0,
+                              width: 70.0,
+                              child: getImage(position),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ));
-      },
-    );
+                ));
+          },
+        ));
   }
 
   getSkeleton() {

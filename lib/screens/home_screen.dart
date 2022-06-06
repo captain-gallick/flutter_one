@@ -605,64 +605,72 @@ class _HomeScreenState extends State<HomeScreen>
 
   getDepartmentList() {
     return Expanded(
-      child: GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2),
-          itemCount: departments.length,
-          itemBuilder: (context, position) {
-            return GestureDetector(
-              onTap: () {
-                NetworkCheckUp().checkConnection().then((value) {
-                  if (value) {
-                    setState(() {
-                      depId = int.parse(departments[position].id);
-                      showDeps = -1;
-                      showThis = 2;
-                      selectedDep = departments[position].name;
-                      getServicesByDepartment();
-                    });
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Please connect to internet."),
-                    ));
-                  }
-                });
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Flexible(
-                    flex: 7,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: CircleAvatar(
-                        radius: 70,
-                        backgroundColor: AppColors.appAvatarBG,
-                        child: Image.network(
-                          AppUrl.baseDomain + departments[position].icon,
-                          width: 55,
+      child: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {
+            showDeps = -1;
+            getDepartments();
+          });
+        },
+        child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2),
+            itemCount: departments.length,
+            itemBuilder: (context, position) {
+              return GestureDetector(
+                onTap: () {
+                  NetworkCheckUp().checkConnection().then((value) {
+                    if (value) {
+                      setState(() {
+                        depId = int.parse(departments[position].id);
+                        showDeps = -1;
+                        showThis = 2;
+                        selectedDep = departments[position].name;
+                        getServicesByDepartment();
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("Please connect to internet."),
+                      ));
+                    }
+                  });
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Flexible(
+                      flex: 7,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: CircleAvatar(
+                          radius: 70,
+                          backgroundColor: AppColors.appAvatarBG,
+                          child: Image.network(
+                            AppUrl.baseDomain + departments[position].icon,
+                            width: 55,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Flexible(
-                    flex: 3,
-                    child: Text(
-                      departments[position].name,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 18.0, color: AppColors.appTextDarkBlue),
-                    ),
-                  )
-                ],
-              ),
-            );
-          }),
+                    Flexible(
+                      flex: 3,
+                      child: Text(
+                        departments[position].name,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            fontSize: 18.0, color: AppColors.appTextDarkBlue),
+                      ),
+                    )
+                  ],
+                ),
+              );
+            }),
+      ),
     );
   }
 
   getSkeleton(int num) {
-    if (showThis == 1) {
+    if (num == 1) {
       return getDepartmentSkeleton();
     } else {
       return getServiceSkeleton();
@@ -790,88 +798,100 @@ class _HomeScreenState extends State<HomeScreen>
 
   getServicesList() {
     return Expanded(
-      child: ListView.builder(
-        scrollDirection: Axis.vertical,
-        shrinkWrap: true,
-        itemCount: services.length,
-        itemBuilder: (context, position) {
-          return GestureDetector(
-              onTap: () async {
-                checkLogin(services[position]);
-              },
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 5, left: 20, right: 20),
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(
-                        color: Color.fromARGB(255, 235, 235, 235), width: 2),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  color: AppColors.appLightBlue,
-                  elevation: 5,
-                  child: SizedBox(
-                    height: 120,
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: ListTile(
-                          title: Row(
-                            children: [
-                              CircleAvatar(
+      child: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {
+            showDeps = -1;
+            showThis = 2;
+            getServicesByDepartment();
+          });
+        },
+        child: ListView.builder(
+          scrollDirection: Axis.vertical,
+          shrinkWrap: true,
+          itemCount: services.length,
+          itemBuilder: (context, position) {
+            return GestureDetector(
+                onTap: () async {
+                  checkLogin(services[position]);
+                },
+                child: Padding(
+                  padding:
+                      const EdgeInsets.only(bottom: 5, left: 20, right: 20),
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      side: const BorderSide(
+                          color: Color.fromARGB(255, 235, 235, 235), width: 2),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    color: AppColors.appLightBlue,
+                    elevation: 5,
+                    child: SizedBox(
+                      height: 120,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: ListTile(
+                            title: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: AppColors.appAvatarBG,
+                                  radius: 50,
+                                  child: Image.network(
+                                    AppUrl.baseDomain +
+                                        services[position].image,
+                                    width: 55,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 20),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          services[position].title,
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              color: AppColors.appTextDarkBlue),
+                                        ),
+                                        const Text('Book Now',
+                                            style: TextStyle(
+                                                color: AppColors.appGreen)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            /* subtitle: const Text('Book Now',
+                                style: TextStyle(color: AppColors.appGreen)), */
+                            /* leading: CircleAvatar(
                                 backgroundColor: AppColors.appAvatarBG,
-                                radius: 50,
                                 child: Image.network(
                                   AppUrl.baseDomain + services[position].image,
                                   width: 55,
                                 ),
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 20),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        services[position].title,
-                                        style: const TextStyle(
-                                            fontSize: 16,
-                                            color: AppColors.appTextDarkBlue),
-                                      ),
-                                      const Text('Book Now',
-                                          style: TextStyle(
-                                              color: AppColors.appGreen)),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          /* subtitle: const Text('Book Now',
-                              style: TextStyle(color: AppColors.appGreen)), */
-                          /* leading: CircleAvatar(
-                              backgroundColor: AppColors.appAvatarBG,
-                              child: Image.network(
-                                AppUrl.baseDomain + services[position].image,
-                                width: 55,
-                              ),
-                            ) */
+                              ) */
 
-                          /* ClipRRect(
-                            child: SizedBox(
-                              height: 70.0,
-                              width: 70.0,
-                              child: getImage(position),
-                            ),
-                          ), */
+                            /* ClipRRect(
+                              child: SizedBox(
+                                height: 70.0,
+                                width: 70.0,
+                                child: getImage(position),
+                              ),
+                            ), */
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ));
-        },
+                ));
+          },
+        ),
       ),
     );
   }
