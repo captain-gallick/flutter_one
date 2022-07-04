@@ -3,7 +3,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app_one/data_models/search_location.dart';
-import 'package:flutter_app_one/my_widgets/text_field.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -39,7 +38,7 @@ class _MarkLocationScreenState extends State<MarkLocationScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => getCurrentLocation());
+    WidgetsBinding.instance.addPostFrameCallback((_) => getCurrentLocation());
   }
 
   @override

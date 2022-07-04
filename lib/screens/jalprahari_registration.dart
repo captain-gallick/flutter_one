@@ -351,6 +351,7 @@ class _JalprahariRegScreenState extends State<JalprahariRegScreen> {
           await Response.fromStream(response).then((value) =>
               result = jsonDecode(value.body) as Map<String, dynamic>);
           url = result!['data'];
+          // ignore: deprecated_member_use
           url_launcher.launch(Uri.parse(url).toString());
           Timer(const Duration(seconds: 3), () {
             Navigator.pop(context);

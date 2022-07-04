@@ -23,7 +23,7 @@ class _MySplashScreenState extends State<MySplashScreen> {
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 2), () => checkLogin());
-    WidgetsBinding.instance?.addPostFrameCallback((_) => getCurrentLocation());
+    WidgetsBinding.instance.addPostFrameCallback((_) => getCurrentLocation());
   }
 
   getCurrentLocation() async {

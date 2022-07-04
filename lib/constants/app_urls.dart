@@ -1,28 +1,28 @@
 class AppUrl {
-  static const String baseDomain = 'https://maljal.org/';
-  static const String baseURL = "https://maljal.org/api/authentication";
-  static const String sendOtp = "https://maljal.org/api/authentication/login";
+  static const String baseDomain = 'https://upaay.org.in/';
+  static const String baseURL = "https://upaay.org.in/api/authentication";
+  static const String sendOtp = "https://upaay.org.in/api/authentication/login";
   static const String verifyOtp =
-      "https://maljal.org/api/authentication/verify";
+      "https://upaay.org.in/api/authentication/verify";
   static const String register = baseURL + "/registration";
 
-  static const String baseServices = 'https://maljal.org/api';
+  static const String baseServices = 'https://upaay.org.in/api';
 
   static const String departments = baseServices + "/departments";
   static const String services = baseServices + "/services";
   static const String servicesByDepartment = services + "/bydepartmentid/";
 
-  static const String insertbooking = "https://maljal.org/api/booking";
+  static const String insertbooking = "https://upaay.org.in/api/booking";
 
-  static const String imageUrl = 'https://maljal.org/';
-  static const String citiesUrl = 'https://maljal.org/api/departments/cities';
-  static const String areasUrl = 'https://maljal.org/api/departments/area/';
+  static const String imageUrl = 'https://upaay.org.in/';
+  static const String citiesUrl = 'https://upaay.org.in/api/departments/cities';
+  static const String areasUrl = 'https://upaay.org.in/api/departments/area/';
 
-  static const String updateUser = 'https://maljal.org/api/user';
-  static const String search = 'https://maljal.org/api/services/search/';
+  static const String updateUser = 'https://upaay.org.in/api/user';
+  static const String search = 'https://upaay.org.in/api/services/search/';
   static const String getLatestLocation =
-      'https://maljal.org/api/booking/livetrack/';
-  static const String jalprahari = 'https://maljal.org/api/jalprahri';
-  static const String states = 'https://maljal.org/api/jalprahri/state';
-  static const String jcity = 'https://maljal.org/api/jalprahri/city/';
+      'https://upaay.org.in/api/booking/livetrack/';
+  static const String jalprahari = 'https://upaay.org.in/api/jalprahri';
+  static const String states = 'https://upaay.org.in/api/jalprahri/state';
+  static const String jcity = 'https://upaay.org.in/api/jalprahri/city/';
 }

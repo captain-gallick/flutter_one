@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app_one/constants/app_urls.dart';
 import 'package:flutter_app_one/data_models/my_services.dart';
 import 'package:flutter_app_one/data_models/service_count.dart';
-import 'package:flutter_app_one/my_widgets/app_button.dart';
 import 'package:flutter_app_one/my_widgets/text_field.dart';
 import 'package:flutter_app_one/screens/home_screen.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
@@ -15,7 +14,6 @@ import 'package:http/http.dart';
 
 import 'book_service.dart';
 import 'login_screen.dart';
-import 'package:flutter_app_one/utils/globals.dart' as globals;
 
 Map serviceCount = {};
 List<ServiceCount> mServiceCount = [];
@@ -37,7 +35,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => getServices());
+    WidgetsBinding.instance.addPostFrameCallback((_) => getServices());
   }
 
   @override

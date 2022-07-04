@@ -57,6 +57,7 @@ class _BookServiceScreenState extends State<BookServiceScreen>
   final nameController = TextEditingController();
   final buildingController = TextEditingController();
   final wardController = TextEditingController();
+  final landmarkController = TextEditingController();
   VideoPlayerController? _videoController;
 
   final int depId;
@@ -115,8 +116,8 @@ class _BookServiceScreenState extends State<BookServiceScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => getUserInfo());
-    WidgetsBinding.instance?.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => getUserInfo());
+    WidgetsBinding.instance.addObserver(this);
   }
 
   _BookServiceScreenState(this.cameraImgPath, this.depId, this.serviceName,
@@ -128,11 +129,12 @@ class _BookServiceScreenState extends State<BookServiceScreen>
     nameController.dispose();
     buildingController.dispose();
     wardController.dispose();
+    landmarkController.dispose();
     if (_pickedVideo != null) {
       _videoController!.dispose();
     }
 
-    WidgetsBinding.instance?.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -360,6 +362,12 @@ class _BookServiceScreenState extends State<BookServiceScreen>
                 child: Text(pincodeText,
                     style: const TextStyle(color: AppColors.lightTextColor)),
               )),
+          heading('Landmark (लैंडमार्क)'),
+          MyTextField(
+            myController: landmarkController,
+            type: TextInputType.multiline,
+            hint: "Landmark (लैंडमार्क)",
+          ),
           heading('Short Description (विवरण)'),
           MyTextField(
             myController: descriptionController,
@@ -1048,6 +1056,7 @@ class _BookServiceScreenState extends State<BookServiceScreen>
         request.fields['city'] = cityId;
         request.fields['lat'] = lat;
         request.fields['lng'] = lng;
+        request.fields['landmark'] = landmarkController.text;
         request.fields['sdescr'] = descriptionController.text;
         if (fileName != '') {
           /* request.files.add(MultipartFile(

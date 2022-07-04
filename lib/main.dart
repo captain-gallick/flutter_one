@@ -1,6 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app_one/screens/mark_location.dart';
 
 import 'package:flutter_app_one/screens/splash_screen.dart';
 // ignore: unused_import

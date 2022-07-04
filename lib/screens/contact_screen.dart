@@ -1,5 +1,6 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
-import 'package:flutter_app_one/screens/home_screen.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
 import 'package:url_launcher/url_launcher.dart';
@@ -90,7 +91,7 @@ class ContactScreen extends StatelessWidget {
                         child: IconButton(
                           tooltip: 'Call Customer Care',
                           onPressed: () {
-                            url_launcher.launch("tel://+919997667559");
+                            url_launcher.launch("tel://+919759776919");
                           },
                           icon: Image.asset('assets/images/call_icon.png'),
                         )),
@@ -123,12 +124,12 @@ class ContactScreen extends StatelessWidget {
                           children: [
                             GestureDetector(
                               onTap: () {
-                                url_launcher.launch("tel://+919997667559");
+                                url_launcher.launch("tel://+919759776919");
                               },
                               child: const Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
-                                  '+(91) 9997667559',
+                                  '+(91) 9759776919',
                                   style: TextStyle(
                                       color: AppColors.appTextDarkBlue,
                                       fontSize: 18.0),
@@ -157,13 +158,13 @@ class ContactScreen extends StatelessWidget {
                                 onTap: () {
                                   final Uri params = Uri(
                                       scheme: 'mailto',
-                                      path: 'info@maljal.org');
+                                      path: 'info@upaay.org.in');
 
                                   var url = params.toString();
                                   launch(url);
                                 },
                                 child: const Text(
-                                  'info@maljal.org',
+                                  'info@upaay.org.in',
                                   style: TextStyle(
                                       color: AppColors.appTextDarkBlue,
                                       fontSize: 18.0),
@@ -173,13 +174,13 @@ class ContactScreen extends StatelessWidget {
                                 onTap: () {
                                   final Uri params = Uri(
                                       scheme: 'mailto',
-                                      path: 'help@maljal.org');
+                                      path: 'help@upaay.org.in');
 
                                   var url = params.toString();
                                   launch(url);
                                 },
                                 child: const Text(
-                                  'help@maljal.org',
+                                  'help@upaay.org.in',
                                   style: TextStyle(
                                       color: AppColors.appTextDarkBlue,
                                       fontSize: 18.0),
@@ -189,39 +190,10 @@ class ContactScreen extends StatelessWidget {
                           ),
                         ),
                         leading: Image.asset(
-                          'assets/images/mail.png',
+                          'assets/images/message.png',
                           width: 50,
                         )),
                   ),
-                ),
-                SizedBox(
-                  width: 300,
-                  child: ListTile(
-                      dense: true,
-                      title: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'maljal@skype',
-                              style: TextStyle(
-                                  color: AppColors.appTextDarkBlue,
-                                  fontSize: 18.0),
-                            ),
-                            Text(
-                              'maljal_business@skype',
-                              style: TextStyle(
-                                  color: AppColors.appTextDarkBlue,
-                                  fontSize: 18.0),
-                            ),
-                          ],
-                        ),
-                      ),
-                      leading: Image.asset(
-                        'assets/images/message.png',
-                        width: 50,
-                      )),
                 ),
               ],
             )

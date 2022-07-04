@@ -29,7 +29,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   bool showHistory = false;
   @override
   void initState() {
-    WidgetsBinding.instance?.addPostFrameCallback((_) => getBookingHistory());
+    WidgetsBinding.instance.addPostFrameCallback((_) => getBookingHistory());
     super.initState();
   }
 
@@ -62,7 +62,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                 IconButton(
                   tooltip: 'Call Customer Care',
                   onPressed: () {
-                    url_launcher.launch("tel://+919997667559");
+                    // ignore: deprecated_member_use
+                    url_launcher.launch("tel://+919759776919");
                   },
                   icon: Image.asset('assets/images/call_icon.png'),
                 )

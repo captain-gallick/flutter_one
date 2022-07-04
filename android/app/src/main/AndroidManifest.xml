@@ -10,7 +10,7 @@ android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
    <application
         android:allowBackup="false"
-        android:label="MalJal"
+        android:label="UPaay"
         android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.google.android.geo.API_KEY"
                android:value="AIzaSyAsuK3dKiwR9RzV1DzG7Hy9Bw5Wx2eptug"/>

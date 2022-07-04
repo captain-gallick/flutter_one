@@ -1,4 +1,4 @@
-// ignore_for_file: empty_catches
+// ignore_for_file: empty_catches, deprecated_member_use
 
 import 'dart:convert';
 import 'dart:developer';
@@ -12,7 +12,6 @@ import 'package:flutter_app_one/data_models/my_services.dart';
 import 'package:flutter_app_one/screens/book_service.dart';
 import 'package:flutter_app_one/screens/contact_screen.dart';
 import 'package:flutter_app_one/screens/jalprahari_registration.dart';
-import 'package:flutter_app_one/screens/search_screen.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
 import 'package:flutter_app_one/utils/network_connecttion.dart';
 import 'package:flutter_app_one/utils/shared_preferences.dart';
@@ -33,7 +32,9 @@ import 'package:flutter_app_one/utils/globals.dart' as globals;
 int depId = -1;
 
 List<Department> departments = [];
+List<Department> mDepartments = [];
 List<MyServices> services = [];
+List<MyServices> mServices = [];
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -56,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => getDepartments());
+    WidgetsBinding.instance.addPostFrameCallback((_) => getDepartments());
     /* animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 250)); */
   }
@@ -149,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen>
                             child: IconButton(
                               tooltip: 'Call Customer Care',
                               onPressed: () {
-                                url_launcher.launch("tel://+919997667559");
+                                url_launcher.launch("tel://+919759776919");
                               },
                               icon: Image.asset('assets/images/call_icon.png'),
                             )),
@@ -180,30 +181,6 @@ class _HomeScreenState extends State<HomeScreen>
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.appTextDarkBlue),
                                 ),
-
-                          /* GestureDetector(
-                            onTap: () {
-                              Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const SearchScreen()));
-                            },
-                            child: Container(
-                              decoration: const BoxDecoration(color: Colors.grey),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  children: const <Widget>[
-                                    Text(
-                                      'Search',
-                                    ),
-                                    Icon(Icons.search)
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ), */
                         ],
                       ),
                     ),
@@ -241,39 +218,30 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const SearchScreen()));
-                        },
-                        child: Container(
-                          decoration: const BoxDecoration(
-                              color: AppColors.appLightBlue,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(20)),
-                              shape: BoxShape.rectangle),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: const <Widget>[
-                                Icon(
+                      child: Container(
+                        decoration: const BoxDecoration(
+                            color: AppColors.appLightBlue,
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                            shape: BoxShape.rectangle),
+                        child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 0),
+                            child: TextField(
+                              onChanged: (value) {
+                                searchList(value);
+                              },
+                              decoration: const InputDecoration(
+                                hintText: 'Search',
+                                hintStyle:
+                                    TextStyle(color: AppColors.lightTextColor),
+                                border: InputBorder.none,
+                                isDense: true,
+                                icon: Icon(
                                   Icons.search,
                                   color: AppColors.appTextDarkBlue,
                                 ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 10),
-                                  child: Text(
-                                    'Search Something here',
-                                    style: TextStyle(
-                                        color: AppColors.lightTextColor),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                              ),
+                            )),
                       ),
                     ),
                     const SizedBox(
@@ -528,12 +496,14 @@ class _HomeScreenState extends State<HomeScreen>
         //showLoader();
         try {
           departments.clear();
+          mDepartments.clear();
           final Response response = await get(Uri.parse(AppUrl.departments));
           log(response.body);
           if (jsonDecode(response.body).toString().contains('data')) {
             List<dynamic> list = jsonDecode(response.body)['data'];
             for (int i = 0; i < list.length; i++) {
               departments.add(Department.fromJson(list[i]));
+              mDepartments.add(Department.fromJson(list[i]));
             }
             setState(() {
               showDeps = 1;
@@ -556,6 +526,7 @@ class _HomeScreenState extends State<HomeScreen>
     //showLoader();
     try {
       services.clear();
+      mServices.clear();
       final Response response =
           await get(Uri.parse(AppUrl.servicesByDepartment + depId.toString()));
 
@@ -564,6 +535,7 @@ class _HomeScreenState extends State<HomeScreen>
         List<dynamic> list = jsonDecode(response.body)['data'];
         for (int i = 0; i < list.length; i++) {
           services.add(MyServices.fromJson(list[i]));
+          mServices.add(MyServices.fromJson(list[i]));
         }
         setState(() {
           showDeps = 2;
@@ -603,6 +575,29 @@ class _HomeScreenState extends State<HomeScreen>
         });
   }
 
+  searchList(String value) {
+    if (showDeps == 1) {
+      setState(() {
+        mDepartments.clear();
+        for (int i = 0; i < departments.length; i++) {
+          if (departments[i].name.toLowerCase().contains(value.toLowerCase())) {
+            mDepartments.add(departments[i]);
+          }
+        }
+      });
+    } else {
+      setState(() {
+        mServices.clear();
+        for (int i = 0; i < services.length; i++) {
+          if (services[i].title.toLowerCase().contains(value.toLowerCase())) {
+            log('matches: ' + (i + 1).toString());
+            mServices.add(services[i]);
+          }
+        }
+      });
+    }
+  }
+
   getDepartmentList() {
     return Expanded(
       child: RefreshIndicator(
@@ -615,17 +610,17 @@ class _HomeScreenState extends State<HomeScreen>
         child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2),
-            itemCount: departments.length,
+            itemCount: mDepartments.length,
             itemBuilder: (context, position) {
               return GestureDetector(
                 onTap: () {
                   NetworkCheckUp().checkConnection().then((value) {
                     if (value) {
                       setState(() {
-                        depId = int.parse(departments[position].id);
+                        depId = int.parse(mDepartments[position].id);
                         showDeps = -1;
                         showThis = 2;
-                        selectedDep = departments[position].name;
+                        selectedDep = mDepartments[position].name;
                         getServicesByDepartment();
                       });
                     } else {
@@ -646,7 +641,7 @@ class _HomeScreenState extends State<HomeScreen>
                           radius: 70,
                           backgroundColor: AppColors.appAvatarBG,
                           child: Image.network(
-                            AppUrl.baseDomain + departments[position].icon,
+                            AppUrl.baseDomain + mDepartments[position].icon,
                             width: 55,
                           ),
                         ),
@@ -655,7 +650,7 @@ class _HomeScreenState extends State<HomeScreen>
                     Flexible(
                       flex: 3,
                       child: Text(
-                        departments[position].name,
+                        mDepartments[position].name,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                             fontSize: 18.0, color: AppColors.appTextDarkBlue),
@@ -809,11 +804,11 @@ class _HomeScreenState extends State<HomeScreen>
         child: ListView.builder(
           scrollDirection: Axis.vertical,
           shrinkWrap: true,
-          itemCount: services.length,
+          itemCount: mServices.length,
           itemBuilder: (context, position) {
             return GestureDetector(
                 onTap: () async {
-                  checkLogin(services[position]);
+                  checkLogin(mServices[position]);
                 },
                 child: Padding(
                   padding:
@@ -839,7 +834,7 @@ class _HomeScreenState extends State<HomeScreen>
                                   radius: 50,
                                   child: Image.network(
                                     AppUrl.baseDomain +
-                                        services[position].image,
+                                        mServices[position].image,
                                     width: 55,
                                   ),
                                 ),
@@ -853,7 +848,7 @@ class _HomeScreenState extends State<HomeScreen>
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          services[position].title,
+                                          mServices[position].title,
                                           style: const TextStyle(
                                               fontSize: 16,
                                               color: AppColors.appTextDarkBlue),

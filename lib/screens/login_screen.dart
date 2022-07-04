@@ -47,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
     SmsAutoFill().getAppSignature.then((value) {
       appSignature = value;
     });
-    WidgetsBinding.instance?.addPostFrameCallback((_) => getCurrentLocation());
+    WidgetsBinding.instance.addPostFrameCallback((_) => getCurrentLocation());
   }
 
   @override

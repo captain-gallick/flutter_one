@@ -1,14 +1,14 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app_one/constants/app_urls.dart';
 import 'package:flutter_app_one/data_models/my_bookings.dart';
-import 'package:flutter_app_one/screens/booking_history.dart';
 import 'package:flutter_app_one/screens/tracker_screen.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
 import 'package:flutter_app_one/utils/network_connecttion.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
-import 'package:flutter/rendering.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -93,7 +93,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       tooltip: 'Call Customer Care',
                       icon: Image.asset('assets/images/call_icon.png'),
                       onPressed: () {
-                        url_launcher.launch("tel://+919997667559");
+                        url_launcher.launch("tel://+919759776919");
                       }),
                 ],
                 leading: IconButton(
