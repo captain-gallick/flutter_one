@@ -91,7 +91,7 @@ class ContactScreen extends StatelessWidget {
                         child: IconButton(
                           tooltip: 'Call Customer Care',
                           onPressed: () {
-                            url_launcher.launch("tel://+919759776919");
+                            url_launcher.launch("tel://+919997667559");
                           },
                           icon: Image.asset('assets/images/call_icon.png'),
                         )),
@@ -124,12 +124,12 @@ class ContactScreen extends StatelessWidget {
                           children: [
                             GestureDetector(
                               onTap: () {
-                                url_launcher.launch("tel://+919759776919");
+                                url_launcher.launch("tel://18003094747");
                               },
                               child: const Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
-                                  '+(91) 9759776919',
+                                  '1800 309 4747',
                                   style: TextStyle(
                                       color: AppColors.appTextDarkBlue,
                                       fontSize: 18.0),

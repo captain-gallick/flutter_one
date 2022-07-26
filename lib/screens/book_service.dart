@@ -4,7 +4,6 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_one/constants/app_urls.dart';
 import 'package:flutter_app_one/data_models/areas.dart';
@@ -68,7 +67,6 @@ class _BookServiceScreenState extends State<BookServiceScreen>
 
   String fileName = '';
   String videoName = '';
-  late PlatformFile media, media1;
   late UserPreferences prefs;
 
   String cityText = 'Select City';
@@ -116,8 +114,8 @@ class _BookServiceScreenState extends State<BookServiceScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => getUserInfo());
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance?.addPostFrameCallback((_) => getUserInfo());
+    WidgetsBinding.instance?.addObserver(this);
   }
 
   _BookServiceScreenState(this.cameraImgPath, this.depId, this.serviceName,
@@ -134,7 +132,7 @@ class _BookServiceScreenState extends State<BookServiceScreen>
       _videoController!.dispose();
     }
 
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance?.removeObserver(this);
     super.dispose();
   }
 
@@ -1086,7 +1084,7 @@ class _BookServiceScreenState extends State<BookServiceScreen>
       log(request.headers.toString()); */
 
         var response = await request.send();
-        log(response.toString());
+        //log(response.toString());
         if (response.statusCode == 200) {
           Navigator.pop(dialogContext);
           showLoader(2);

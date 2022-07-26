@@ -41,7 +41,7 @@ class _TrackerScreenState extends State<TrackerScreen> {
     super.initState();
     locationTimer = Timer.periodic(
         const Duration(seconds: 10), (Timer t) => getLatestLocation(0));
-    WidgetsBinding.instance.addPostFrameCallback((_) => getLatestLocation(1));
+    WidgetsBinding.instance?.addPostFrameCallback((_) => getLatestLocation(1));
   }
 
   @override

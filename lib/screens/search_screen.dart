@@ -35,7 +35,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => getServices());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => getServices());
   }
 
   @override

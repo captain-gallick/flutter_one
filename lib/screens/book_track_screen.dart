@@ -22,7 +22,7 @@ class _BookTrackScreenState extends State<BookTrackScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => getCurrentLocation());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => getCurrentLocation());
   }
 
   @override

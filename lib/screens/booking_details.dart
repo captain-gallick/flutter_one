@@ -93,7 +93,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       tooltip: 'Call Customer Care',
                       icon: Image.asset('assets/images/call_icon.png'),
                       onPressed: () {
-                        url_launcher.launch("tel://+919759776919");
+                        url_launcher.launch("tel://18003094747");
                       }),
                 ],
                 leading: IconButton(

@@ -38,7 +38,7 @@ class _MarkLocationScreenState extends State<MarkLocationScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => getCurrentLocation());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => getCurrentLocation());
   }
 
   @override

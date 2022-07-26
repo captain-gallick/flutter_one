@@ -1,5 +1,3 @@
-// ignore_for_file: empty_catches, deprecated_member_use
-
 import 'dart:convert';
 import 'dart:developer';
 
@@ -57,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => getDepartments());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => getDepartments());
     /* animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 250)); */
   }
@@ -150,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen>
                             child: IconButton(
                               tooltip: 'Call Customer Care',
                               onPressed: () {
-                                url_launcher.launch("tel://+919759776919");
+                                url_launcher.launch("tel://18003094747");
                               },
                               icon: Image.asset('assets/images/call_icon.png'),
                             )),
