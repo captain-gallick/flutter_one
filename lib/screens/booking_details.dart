@@ -8,6 +8,7 @@ import 'package:flutter_app_one/data_models/my_bookings.dart';
 import 'package:flutter_app_one/screens/tracker_screen.dart';
 import 'package:flutter_app_one/utils/app_colors.dart';
 import 'package:flutter_app_one/utils/network_connecttion.dart';
+import 'package:flutter_share/flutter_share.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -134,93 +135,131 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                               key: _printKey,
                               child: Padding(
                                 padding: const EdgeInsets.all(15.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Expanded(
-                                      child: ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(20.0),
-                                        child: getImage(),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
-                                    Text(
-                                      'Service Name: ' +
-                                          widget.history.serviceName,
-                                      style: const TextStyle(
-                                          fontSize: 16.0,
-                                          color: AppColors.appTextDarkBlue),
-                                    ),
-                                    Text(
-                                      'Service No: ' + widget.history.id,
-                                      style: const TextStyle(
-                                          fontSize: 16.0,
-                                          color: AppColors.appTextDarkBlue),
-                                    ),
-                                    Text(
-                                      'Description: ' + widget.history.sdescr,
-                                      style: const TextStyle(
-                                          fontSize: 16.0,
-                                          color: AppColors.appTextDarkBlue),
-                                    ),
-                                    getVideo(widget.history.meadia1.isNotEmpty
-                                        ? 1
-                                        : 2),
-                                    Visibility(
-                                        visible: ((widget.history.status ==
-                                                    '2' ||
-                                                widget.history.status == '3')
-                                            ? true
-                                            : false),
-                                        child: Text(
-                                          'Vendor Name: ' +
-                                              widget.history.vendorName,
+                                child: Stack(
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Expanded(
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(20.0),
+                                            child: getImage(),
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: 10,
+                                        ),
+                                        Text(
+                                          'Service Name: ' +
+                                              widget.history.serviceName,
+                                          style: const TextStyle(
+                                              fontSize: 16.0,
+                                              color: AppColors.appTextDarkBlue),
+                                        ),
+                                        Text(
+                                          'Service No: ' + widget.history.id,
+                                          style: const TextStyle(
+                                              fontSize: 16.0,
+                                              color: AppColors.appTextDarkBlue),
+                                        ),
+                                        Text(
+                                          'Description: ' +
+                                              widget.history.sdescr,
+                                          style: const TextStyle(
+                                              fontSize: 16.0,
+                                              color: AppColors.appTextDarkBlue),
+                                        ),
+                                        getVideo(
+                                            widget.history.meadia1.isNotEmpty
+                                                ? 1
+                                                : 2),
+                                        Visibility(
+                                            visible: ((widget.history.status ==
+                                                        '2' ||
+                                                    widget.history.status ==
+                                                        '3')
+                                                ? true
+                                                : false),
+                                            child: Text(
+                                              'Vendor Name: ' +
+                                                  widget.history.vendorName,
+                                              style: const TextStyle(
+                                                  fontSize: 16.0,
+                                                  color: AppColors
+                                                      .appTextDarkBlue),
+                                            )),
+                                        const SizedBox(
+                                          height: 10,
+                                        ),
+                                        const Text(
+                                          'Personal Details',
+                                          style: TextStyle(
+                                              fontSize: 18.0,
+                                              color: AppColors.appTextDarkBlue),
+                                        ),
+                                        Text(
+                                          'Name: ' + widget.history.name,
+                                          style: const TextStyle(
+                                              fontSize: 16.0,
+                                              color: AppColors.appTextDarkBlue),
+                                        ),
+                                        Text(
+                                          'Phone: ' + widget.history.phone,
+                                          style: const TextStyle(
+                                              fontSize: 16.0,
+                                              color: AppColors.appTextDarkBlue),
+                                        ),
+                                        Text(
+                                          'Email: ' + widget.history.email,
+                                          style: const TextStyle(
+                                              fontSize: 16.0,
+                                              color: AppColors.appTextDarkBlue),
+                                        ),
+                                        Text(
+                                          widget.history.addedOn.substring(
+                                                  0,
+                                                  widget.history.addedOn
+                                                      .indexOf(" ")) +
+                                              " | " +
+                                              widget.history.addedOn.substring(
+                                                  widget.history.addedOn
+                                                      .indexOf(" ")) +
+                                              " | " +
+                                              (getStatus(
+                                                  widget.history.status)),
                                           style: const TextStyle(
                                               color: AppColors.appTextDarkBlue),
-                                        )),
-                                    const SizedBox(
-                                      height: 10,
+                                        ),
+                                        Visibility(
+                                          visible: (widget.history.vendorMessage
+                                              .isNotEmpty),
+                                          child: Text(
+                                            'Vendor Message: ' +
+                                                widget.history.vendorMessage,
+                                            style: const TextStyle(
+                                                fontSize: 16.0,
+                                                color:
+                                                    AppColors.appTextDarkBlue),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const Text(
-                                      'Personal Details',
-                                      style: TextStyle(
-                                          fontSize: 18.0,
-                                          color: AppColors.appTextDarkBlue),
-                                    ),
-                                    Text(
-                                      'Name: ' + widget.history.name,
-                                      style: const TextStyle(
-                                          fontSize: 16.0,
-                                          color: AppColors.appTextDarkBlue),
-                                    ),
-                                    Text(
-                                      'Phone: ' + widget.history.phone,
-                                      style: const TextStyle(
-                                          fontSize: 16.0,
-                                          color: AppColors.appTextDarkBlue),
-                                    ),
-                                    Text(
-                                      'Email: ' + widget.history.email,
-                                      style: const TextStyle(
-                                          fontSize: 16.0,
-                                          color: AppColors.appTextDarkBlue),
-                                    ),
-                                    Text(
-                                      widget.history.addedOn.substring(
-                                              0,
-                                              widget.history.addedOn
-                                                  .indexOf(" ")) +
-                                          " | " +
-                                          widget.history.addedOn.substring(
-                                              widget.history.addedOn
-                                                  .indexOf(" ")) +
-                                          " | " +
-                                          (getStatus(widget.history.status)),
-                                      style: const TextStyle(
-                                          color: AppColors.appTextDarkBlue),
+                                    Positioned(
+                                      right: 0,
+                                      child: CircleAvatar(
+                                        backgroundColor: Colors.amber,
+                                        child: IconButton(
+                                          onPressed: () {
+                                            FlutterShare.share(
+                                                title: 'Service Details',
+                                                text: formatShareText());
+                                          },
+                                          icon: const Icon(Icons.share),
+                                          color: AppColors.appTextDarkBlue,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -235,16 +274,45 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       Flexible(
                         flex: 2,
                         child: Center(
-                          child: Visibility(
-                            visible: ((widget.history.status == '1' ||
-                                    widget.history.status == '3')
-                                ? false
-                                : true),
-                            child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: <Widget>[
-                                  OutlinedButton(
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: <Widget>[
+                                Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          widget.history.rating +
+                                              '/' +
+                                              widget.history.ratingOutOf +
+                                              '\t',
+                                          style: const TextStyle(
+                                              fontSize: 16.0,
+                                              color: AppColors.appTextDarkBlue),
+                                        ),
+                                        Icon(
+                                          Icons.star_rounded,
+                                          color: Colors.amber[400],
+                                          size: 25,
+                                        )
+                                      ],
+                                    ),
+                                    Text(
+                                      widget.history.ratingCount + ' Reviews',
+                                      style: const TextStyle(
+                                          fontSize: 16.0,
+                                          color: AppColors.appTextDarkBlue),
+                                    ),
+                                  ],
+                                ),
+                                Visibility(
+                                  visible: ((widget.history.status == '1' ||
+                                          widget.history.status == '3')
+                                      ? false
+                                      : true),
+                                  child: OutlinedButton(
                                       onPressed: () {
                                         Navigator.pushAndRemoveUntil(
                                           context,
@@ -262,7 +330,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                             color: AppColors.appTextDarkBlue,
                                             fontSize: 20.0),
                                       )),
-                                  /* OutlinedButton(
+                                )
+                                /* OutlinedButton(
                                       onPressed: () {
                                         NetworkCheckUp()
                                             .checkConnection()
@@ -292,13 +361,41 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                             color: Colors.black,
                                             fontSize: 20.0),
                                       )), */
-                                ]),
-                          ),
+                              ]),
                         ),
-                      )
+                      ),
                     ]),
               ),
             )));
+  }
+
+  formatShareText() {
+    return 'Service Details--\nService Name: ' +
+        widget.history.serviceName +
+        '\n' +
+        'Service No: ' +
+        widget.history.id +
+        '\n' +
+        'Description: ' +
+        widget.history.sdescr +
+        '\n\n' +
+        'Personal Details--' +
+        '\n' +
+        'Name: ' +
+        widget.history.name +
+        '\n' +
+        'Phone: ' +
+        widget.history.phone +
+        '\n' +
+        'Email: ' +
+        widget.history.email +
+        '\n' +
+        widget.history.addedOn
+            .substring(0, widget.history.addedOn.indexOf(" ")) +
+        " | " +
+        widget.history.addedOn.substring(widget.history.addedOn.indexOf(" ")) +
+        " | " +
+        (getStatus(widget.history.status));
   }
 
   getVideo(int i) {
@@ -331,10 +428,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   getStatus(status) {
     if (status == '1') {
       return 'OPEN';
-    } else if (status == '2') {
-      return 'PROCESSING';
-    } else {
+    } else if (status == '3') {
       return 'COMPLETE';
+    } else {
+      return 'PROCESSING';
     }
   }
 

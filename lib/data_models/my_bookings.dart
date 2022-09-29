@@ -23,6 +23,10 @@ class MyBooking {
   String lng;
   String city;
   String vendorName;
+  String rating;
+  String ratingOutOf;
+  String ratingCount;
+  String vendorMessage;
 
   MyBooking(
       {required this.id,
@@ -48,6 +52,10 @@ class MyBooking {
       required this.lng,
       required this.city,
       required this.vendorName,
+      required this.rating,
+      required this.ratingOutOf,
+      required this.ratingCount,
+      required this.vendorMessage,
       this.serviceName = 'Service Name'});
 
   factory MyBooking.fromJson(Map<String, dynamic> responseData) {
@@ -74,6 +82,10 @@ class MyBooking {
         pincode: responseData['pincode'],
         ward: responseData['ward'],
         city: responseData['city'],
+        vendorMessage: responseData['vendor_msg'],
+        rating: responseData['rat'].toString(),
+        ratingOutOf: responseData['rat_outof'].toString(),
+        ratingCount: responseData['rat_count'].toString(),
         vendorName: responseData['vendor_name'] ?? '',
         serviceName: responseData['service_name'] ?? "");
   }

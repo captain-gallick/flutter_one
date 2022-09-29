@@ -240,16 +240,15 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
 
   getStatus(status) {
     if (status == '1') {
-      return 'ASSIGN TO VENDOR';
-    } else if (status == '2') {
-      return 'PROCESSING';
-    } else {
+      return 'OPEN';
+    } else if (status == '3') {
       return 'COMPLETE';
+    } else {
+      return 'PROCESSING';
     }
   }
 
   getImage(int position) {
-    log(AppUrl.imageUrl + history[position].media);
     if (history[position].media != '') {
       return Align(
           alignment: Alignment.centerRight,
