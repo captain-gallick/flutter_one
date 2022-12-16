@@ -27,6 +27,7 @@ class MyBooking {
   String ratingOutOf;
   String ratingCount;
   String vendorMessage;
+  String happyCode;
 
   MyBooking(
       {required this.id,
@@ -56,6 +57,7 @@ class MyBooking {
       required this.ratingOutOf,
       required this.ratingCount,
       required this.vendorMessage,
+      required this.happyCode,
       this.serviceName = 'Service Name'});
 
   factory MyBooking.fromJson(Map<String, dynamic> responseData) {
@@ -83,6 +85,7 @@ class MyBooking {
         ward: responseData['ward'],
         city: responseData['city'],
         vendorMessage: responseData['vendor_msg'],
+        happyCode: responseData['code'] ?? '',
         rating: responseData['rat'].toString(),
         ratingOutOf: responseData['rat_outof'].toString(),
         ratingCount: responseData['rat_count'].toString(),

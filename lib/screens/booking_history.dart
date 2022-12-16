@@ -281,7 +281,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
               content: Text(jsonDecode(response.body).toString().toUpperCase()),
             ));
           } else {
-            log(response.body);
+            log('booking history --> ' + response.body);
             List<dynamic> list = jsonDecode(response.body)['data'];
             for (int i = 0; i < list.length; i++) {
               history.add(MyBooking.fromJson(list[i]));

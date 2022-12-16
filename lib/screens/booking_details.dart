@@ -113,15 +113,16 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       ); */
                     }),
               ),
-              body: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Flexible(
-                        flex: 3,
-                        child: Card(
+              body: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Container(
+                  padding: const EdgeInsets.all(20.0),
+                  margin: const EdgeInsets.only(bottom: 70),
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Card(
                           color: Colors.blue.shade50,
                           margin: const EdgeInsets.symmetric(
                               vertical: 20.0, horizontal: 5.0),
@@ -141,12 +142,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: <Widget>[
-                                        Expanded(
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(20.0),
-                                            child: getImage(),
-                                          ),
+                                        ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(20.0),
+                                          child: getImage(),
                                         ),
                                         const SizedBox(
                                           height: 10,
@@ -244,6 +243,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                                     AppColors.appTextDarkBlue),
                                           ),
                                         ),
+                                        Visibility(
+                                          visible:
+                                              (widget.history.happyCode != '0'),
+                                          child: Text(
+                                            'Happy Code: ' +
+                                                widget.history.happyCode,
+                                            style: const TextStyle(
+                                                fontSize: 16.0,
+                                                color:
+                                                    AppColors.appTextDarkBlue),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                     Positioned(
@@ -267,13 +278,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                             ),
                           ),
                         ),
-                      ),
-                      // const SizedBox(
-                      //   height: 60.0,
-                      // ),
-                      Flexible(
-                        flex: 2,
-                        child: Center(
+                        const SizedBox(
+                          height: 40.0,
+                        ),
+                        Center(
                           child: Column(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: <Widget>[
@@ -307,11 +315,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                     ),
                                   ],
                                 ),
+                                const SizedBox(
+                                  height: 40.0,
+                                ),
                                 Visibility(
-                                  visible: ((widget.history.status == '1' ||
-                                          widget.history.status == '3')
-                                      ? false
-                                      : true),
+                                  visible: (!(widget.history.status == '1' ||
+                                      widget.history.status == '3')),
                                   child: OutlinedButton(
                                       onPressed: () {
                                         Navigator.pushAndRemoveUntil(
@@ -363,8 +372,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                       )), */
                               ]),
                         ),
-                      ),
-                    ]),
+                      ]),
+                ),
               ),
             )));
   }
@@ -448,10 +457,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 child: Image.network(
                   AppUrl.imageUrl + widget.history.media,
                   fit: BoxFit.cover,
+                  height: 150,
                 ))),
       );
     } else {
-      return const Center(child: Text('No Image Available'));
+      return const SizedBox(
+          height: 150, child: Center(child: Text('No Image Available')));
     }
   }
 

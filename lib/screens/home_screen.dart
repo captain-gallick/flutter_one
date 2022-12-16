@@ -172,12 +172,14 @@ class _HomeScreenState extends State<HomeScreen>
                                     fontWeight: FontWeight.bold,
                                   ),
                                 )
-                              : const Text(
-                                  'Click the Service you want',
-                                  style: TextStyle(
-                                      fontSize: 22.0,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.appTextDarkBlue),
+                              : const Flexible(
+                                  child: Text(
+                                    'Click the Service you want',
+                                    style: TextStyle(
+                                        fontSize: 22.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.appTextDarkBlue),
+                                  ),
                                 ),
                         ],
                       ),

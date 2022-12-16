@@ -475,47 +475,53 @@ class _BookServiceScreenState extends State<BookServiceScreen>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
-                  Column(
-                    children: <Widget>[
-                      GestureDetector(
-                        child: DottedBorder(
-                          color: Colors.black,
-                          strokeWidth: 1,
-                          child: const Padding(
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      children: <Widget>[
+                        GestureDetector(
+                          child: DottedBorder(
+                            color: Colors.black,
+                            strokeWidth: 1,
+                            child: const Padding(
+                                padding: EdgeInsets.all(12.0),
+                                child: Text('Browse Photo (फ़ोटो डालें)',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                    ))),
+                          ),
+                          onTap: () {
+                            pickImageDialog();
+                            //pickFile();
+                          },
+                        ),
+                        //Text(fileName),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                    flex: 1,
+                    child: Column(
+                      children: <Widget>[
+                        GestureDetector(
+                          child: DottedBorder(
+                            color: Colors.black,
+                            strokeWidth: 1,
+                            child: const Padding(
                               padding: EdgeInsets.all(12.0),
-                              child: Text('Browse Photo (फ़ोटो डालें)',
+                              child: Text('Browse Video (विडीओ डालें)',
                                   style: TextStyle(
                                     fontSize: 10,
-                                  ))),
-                        ),
-                        onTap: () {
-                          pickImageDialog();
-                          //pickFile();
-                        },
-                      ),
-                      //Text(fileName),
-                    ],
-                  ),
-                  Column(
-                    children: <Widget>[
-                      GestureDetector(
-                        child: DottedBorder(
-                          color: Colors.black,
-                          strokeWidth: 1,
-                          child: const Padding(
-                            padding: EdgeInsets.all(12.0),
-                            child: Text('Browse Video (विडीओ डालें)',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                )),
+                                  )),
+                            ),
                           ),
+                          onTap: () {
+                            pickVideo();
+                          },
                         ),
-                        onTap: () {
-                          pickVideo();
-                        },
-                      ),
-                      //Text(videoName),
-                    ],
+                        //Text(videoName),
+                      ],
+                    ),
                   ),
                 ]),
           ),
@@ -692,10 +698,13 @@ class _BookServiceScreenState extends State<BookServiceScreen>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: const <Widget>[
-                      CircularProgressIndicator(),
-                      Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 30.0),
-                          child: Text('Please wait...')),
+                      Flexible(flex: 1, child: CircularProgressIndicator()),
+                      Flexible(
+                        flex: 1,
+                        child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 30.0),
+                            child: Text('Please wait...')),
+                      ),
                     ],
                   ),
                 ),
